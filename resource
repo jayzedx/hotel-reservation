@@ -6,6 +6,10 @@ go get go.mongodb.org/mongo-driver/mongo
 ### gofiber ###
 go get github.com/gofiber/fiber/v2
 
+### go get ###
+go get golang.org/x/crypto/bcrypt
+go get github.com/xdg-go/stringprep@v1.0.4
+
 ### docker ###
 docker run --name mongodb -d mongo:lastest -p 27017:27017
 
@@ -16,3 +20,6 @@ make build
 make run
 
 ./bin/api --listenAddr :7000
+
+### extension ###
+thunder client
