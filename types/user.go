@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -15,15 +16,20 @@ const (
 	minPasswordLen  = 7
 )
 
-type CreateUseParams struct {
+type CreateUserParams struct {
 	FirstName string `json:"firstName"`
 	LastName  string `json:"lastName"`
 	Email     string `json:"email"`
 	Password  string `json:"password"`
 }
 
-// validation
-func (params CreateUseParams) Validate() map[string]string {
+type UpdateUserParams struct {
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+}
+
+// validation for create
+func (params CreateUserParams) Validate() map[string]string {
 	errors := map[string]string{}
 	if len(params.FirstName) < minFirstNameLen {
 		errors["firstName"] = fmt.Sprintf("firstName length should be at least %d characters", minFirstNameLen)
@@ -45,6 +51,18 @@ func isEmailValid(e string) bool {
 	return emailRegx.MatchString(e)
 }
 
+// validation for update
+func (p UpdateUserParams) ToBSON() bson.M {
+	m := bson.M{}
+	if len(p.FirstName) > 0 {
+		m["firstName"] = p.FirstName
+	}
+	if len(p.LastName) > 0 {
+		m["lastName"] = p.LastName
+	}
+	return m
+}
+
 type User struct {
 	Id                primitive.ObjectID `bson:"_id,omitempty" json:"id,omitempty"` //omitempty - don't show json when id is empty
 	FirstName         string             `bson:"firstName" json:"firstName"`
@@ -53,7 +71,7 @@ type User struct {
 	EncryptedPassword string             `bson:"EncryptedPassword" json:"-"`
 }
 
-func NewUserFromParams(params CreateUseParams) (*User, error) {
+func NewUserFromParams(params CreateUserParams) (*User, error) {
 	encp, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcryptCost)
 	if err != nil {
 		return nil, err

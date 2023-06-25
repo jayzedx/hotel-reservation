@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jayzedx/hotel-reservation/types"
 	"go.mongodb.org/mongo-driver/bson"
@@ -17,6 +18,7 @@ type UserStore interface {
 	GetUsers(context.Context) ([]*types.User, error)
 	CreateUser(context.Context, *types.User) (*types.User, error)
 	DeleteUser(context.Context, string) error
+	UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error
 }
 
 type MongoUserStore struct {
@@ -88,6 +90,28 @@ func (s *MongoUserStore) DeleteUser(ctx context.Context, id string) error {
 	}
 	if res.DeletedCount == 0 {
 		return mongo.ErrNoDocuments //fmt.Errorf("user not found")
+	}
+	return nil
+}
+
+func (s *MongoUserStore) UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error {
+
+	values := params.ToBSON()
+	if length := len(values); length <= 0 {
+
+		return fmt.Errorf("no field to update")
+	}
+
+	update := bson.D{
+		{
+			"$set",
+			values,
+		},
+	}
+
+	_, err := s.coll.UpdateOne(ctx, filter, update)
+	if err != nil {
+		return err
 	}
 	return nil
 }
