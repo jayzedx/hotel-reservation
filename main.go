@@ -14,7 +14,6 @@ import (
 
 const dburi = "mongodb://localhost:27017"
 const dbname = "hotel-reservation"
-const userColl = "users"
 
 var config = fiber.Config{
 	ErrorHandler: func(ctx *fiber.Ctx, err error) error {
@@ -27,25 +26,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	/*
-		ctx := context.Background()
-		coll := client.Database(dbname).Collection(userColl)
-		user := types.User{
-			FirstName: "Jay",
-			LastName:  "Layman ",
-		}
-		_, err = coll.InsertOne(ctx, user)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		var jay types.User
-		if err := coll.FindOne(ctx, bson.M{}).Decode(&jay); err != nil {
-			log.Fatal(err)
-		}
-		fmt.Println(jay)
-	*/
-
 	listenAddr := flag.String("listenAddr", ":5000", "The listen address of the API server")
 	flag.Parse()
 
@@ -55,7 +35,7 @@ func main() {
 	app.Get("/foo", handleFoo)
 
 	//handlers initialization
-	userHandler := api.NewUserHandler(db.NewMongoUserStore(client))
+	userHandler := api.NewUserHandler(db.NewMongoUserStore(client, dbname))
 
 	apiv1.Get("/user", userHandler.HandleGetUsers)
 	apiv1.Get("/user/:id", userHandler.HandleGetUser)
