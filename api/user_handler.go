@@ -22,11 +22,6 @@ func NewUserHandler(store *db.Store) *UserHandler {
 }
 
 func (h *UserHandler) HandleGetUsers(c *fiber.Ctx) error {
-	// u := types.User{
-	// 	FirstName: "Jay",
-	// 	LastName:  "Layman",
-	// }
-	// return c.JSON(u)
 	users, err := h.store.User.GetUsers(c.Context())
 	if err != nil {
 		return err

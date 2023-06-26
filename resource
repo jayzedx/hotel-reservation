@@ -23,3 +23,15 @@ make run
 
 ### extension ###
 thunder client
+
+### jwt ###
+go get -u github.com/golang-jwt/jwt/v5
+
+
+### export environment in ubuntu ###
+## nano ~/.bashrc
+export JWT_SECRET=dsakjbfdsaal290
+## source ~/.bashrc // Run the following command to apply the changes
+echo $JWT_SECRET //You can verify that the environment 
+
+
