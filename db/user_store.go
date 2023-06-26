@@ -17,7 +17,7 @@ type UserStore interface {
 	GetUserById(context.Context, string) (*types.User, error)
 	GetUsers(context.Context) ([]*types.User, error)
 	CreateUser(context.Context, *types.User) (*types.User, error)
-	DeleteUser(context.Context, string) error
+	DeleteUser(context.Context, primitive.ObjectID) error
 	UpdateUser(ctx context.Context, filter bson.M, params types.UpdateUserParams) error
 	Dropper
 }
@@ -83,13 +83,8 @@ func (s *MongoUserStore) CreateUser(ctx context.Context, user *types.User) (*typ
 	return user, nil
 }
 
-func (s *MongoUserStore) DeleteUser(ctx context.Context, id string) error {
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return err
-	}
-
-	res, err := s.coll.DeleteOne(ctx, bson.M{"_id": oid})
+func (s *MongoUserStore) DeleteUser(ctx context.Context, id primitive.ObjectID) error {
+	res, err := s.coll.DeleteOne(ctx, bson.M{"_id": id})
 	if err != nil {
 		return err
 	}
