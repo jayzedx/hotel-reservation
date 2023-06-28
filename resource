@@ -30,7 +30,7 @@ go get -u github.com/golang-jwt/jwt/v5
 
 ### export environment in ubuntu ###
 ## nano ~/.bashrc
-export JWT_SECRET=dsakjbfdsaal290
+export JWT_SECRET=adsdsadasdasdasdasd22132das
 ## source ~/.bashrc // Run the following command to apply the changes
 echo $JWT_SECRET //You can verify that the environment 
 
