@@ -8,6 +8,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt"
+	"github.com/jayzedx/hotel-reservation/api/response"
 	"github.com/jayzedx/hotel-reservation/db"
 	"github.com/jayzedx/hotel-reservation/types"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -45,13 +46,20 @@ func (h *AuthHandler) HandleAuthenticate(c *fiber.Ctx) error {
 	user, err := h.userStore.GetUserByEmail(c.Context(), authParams.Email)
 	if err != nil {
 		if errors.Is(err, mongo.ErrNoDocuments) {
-			return fmt.Errorf("invalid credential")
+			return response.InvalidCredentials(c, nil)
 		}
 		return err
 	}
 
 	if !types.IsValidPassword(user.EncryptedPassword, authParams.Password) {
-		return fmt.Errorf("invalid credential")
+		// data := make(map[string]interface{})
+		// users, ok := data["users"].([]*types.User)
+		// if !ok {
+		// 	users = make([]*types.User, 0)
+		// }
+		// data["users"] = append(users, &types.User{FirstName: "jay"})
+		// return response.InvalidCredentials(c, &data)
+		return response.InvalidCredentials(c, nil)
 	}
 
 	resp := AuthResponse{

@@ -85,7 +85,7 @@ func seedHotel(name string, location string, rating int) {
 }
 
 func seedUser(firstName string, lastName string, email string, password string) {
-	fmt.Println("# insert hotel")
+	fmt.Println("# insert user")
 	params := types.CreateUserParams{
 		FirstName: firstName,
 		LastName:  lastName,

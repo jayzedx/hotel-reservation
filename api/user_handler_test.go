@@ -44,7 +44,7 @@ func TestPostUser(t *testing.T) {
 
 	app := fiber.New()
 	userHandler := NewUserHandler(&tdb.store)
-	app.Post("/", userHandler.HandlePostUser)
+	app.Post("/user", userHandler.HandlePostUser)
 
 	params := types.CreateUserParams{
 		Email:     "foo@mail.com",
@@ -54,34 +54,34 @@ func TestPostUser(t *testing.T) {
 	}
 	b, _ := json.Marshal(params)
 
-	req := httptest.NewRequest("POST", "/", bytes.NewReader(b))
+	req := httptest.NewRequest("POST", "/user", bytes.NewReader(b))
 	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := app.Test(req)
 
 	if err != nil {
-		t.Error(err)
+		t.Fatal(err)
 	}
 
 	// bb, _ := io.ReadAll(resp.Body)
 	// fmt.Println(string(bb))
 	var user types.User
 	if len(user.Id) == 0 {
-		t.Errorf("expecting a user id to be set")
+		t.Fatal("expecting a user id to be set")
 	}
 
 	json.NewDecoder(resp.Body).Decode(&user)
 	if user.FirstName != params.FirstName {
-		t.Errorf("expected username %s but got %s", params.FirstName, user.FirstName)
+		t.Fatalf("expected username %s but got %s", params.FirstName, user.FirstName)
 	}
 	if user.LastName != params.LastName {
-		t.Errorf("expected last name %s but got %s", params.LastName, user.LastName)
+		t.Fatalf("expected last name %s but got %s", params.LastName, user.LastName)
 	}
 	if user.Email != params.Email {
-		t.Errorf("expected email %s but got %s", params.Email, user.Email)
+		t.Fatalf("expected email %s but got %s", params.Email, user.Email)
 	}
 	if len(user.EncryptedPassword) > 0 {
-		t.Errorf("expecting the EncryptedPassword not be included in the json response")
+		t.Fatalf("expecting the EncryptedPassword not be included in the json response")
 	}
 	// fmt.Print(user)
 
