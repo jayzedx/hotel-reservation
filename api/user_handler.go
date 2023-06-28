@@ -11,17 +11,17 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-type UserHandler struct {
+type userHandler struct {
 	store *db.Store
 }
 
-func NewUserHandler(store *db.Store) *UserHandler {
-	return &UserHandler{
+func NewUserHandler(store *db.Store) *userHandler {
+	return &userHandler{
 		store: store,
 	}
 }
 
-func (h *UserHandler) HandleGetUsers(c *fiber.Ctx) error {
+func (h *userHandler) HandleGetUsers(c *fiber.Ctx) error {
 	users, err := h.store.User.GetUsers(c.Context())
 	if err != nil {
 		return err
@@ -29,7 +29,7 @@ func (h *UserHandler) HandleGetUsers(c *fiber.Ctx) error {
 	return c.JSON(users)
 }
 
-func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
+func (h *userHandler) HandleGetUser(c *fiber.Ctx) error {
 	var (
 		id = c.Params("id")
 	)
@@ -43,7 +43,7 @@ func (h *UserHandler) HandleGetUser(c *fiber.Ctx) error {
 	return c.JSON(user)
 }
 
-func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
+func (h *userHandler) HandlePostUser(c *fiber.Ctx) error {
 	var params types.CreateUserParams
 	if err := c.BodyParser(&params); err != nil {
 		return err
@@ -63,7 +63,7 @@ func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
 
 }
 
-func (h *UserHandler) HandleDeleteUser(c *fiber.Ctx) error {
+func (h *userHandler) HandleDeleteUser(c *fiber.Ctx) error {
 	userId := c.Params("id")
 	oid, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
@@ -80,7 +80,7 @@ func (h *UserHandler) HandleDeleteUser(c *fiber.Ctx) error {
 	return c.JSON(map[string]string{"deleted": userId})
 }
 
-func (h *UserHandler) HandlePutUser(c *fiber.Ctx) error {
+func (h *userHandler) HandlePutUser(c *fiber.Ctx) error {
 	var (
 		// values bson.M
 		params types.UpdateUserParams

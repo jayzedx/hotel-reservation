@@ -9,13 +9,13 @@ import (
 )
 
 // struct
-type HotelHandler struct {
+type hotelHandler struct {
 	store *db.Store
 }
 
 // function
-func NewHotelHandler(store *db.Store) *HotelHandler {
-	return &HotelHandler{
+func NewHotelHandler(store *db.Store) *hotelHandler {
+	return &hotelHandler{
 		store: store,
 	}
 }
@@ -26,7 +26,7 @@ type HotelQueryParams struct {
 	Rating int
 }
 
-func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
+func (h *hotelHandler) HandleGetHotels(c *fiber.Ctx) error {
 	var qparams HotelQueryParams
 	if err := c.QueryParser(&qparams); err != nil {
 		return err
@@ -49,7 +49,7 @@ func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
 	return c.JSON(hotels)
 }
 
-func (h *HotelHandler) HandleGetHotel(c *fiber.Ctx) error {
+func (h *hotelHandler) HandleGetHotel(c *fiber.Ctx) error {
 	id := c.Params("id")
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -64,7 +64,7 @@ func (h *HotelHandler) HandleGetHotel(c *fiber.Ctx) error {
 	return c.JSON(hotels)
 }
 
-func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
+func (h *hotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 	id := c.Params("id")
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
@@ -82,17 +82,17 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 	return c.JSON(rooms)
 }
 
-func (h *HotelHandler) HandlePostHotel(c *fiber.Ctx) error {
+func (h *hotelHandler) HandlePostHotel(c *fiber.Ctx) error {
 
 	return nil
 }
 
-func (h *HotelHandler) HandlePutHotel(c *fiber.Ctx) error {
+func (h *hotelHandler) HandlePutHotel(c *fiber.Ctx) error {
 
 	return nil
 }
 
-func (h *HotelHandler) HandleDeleteHotel(c *fiber.Ctx) error {
+func (h *hotelHandler) HandleDeleteHotel(c *fiber.Ctx) error {
 
 	return nil
 }

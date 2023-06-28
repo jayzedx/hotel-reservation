@@ -19,15 +19,15 @@ type RoomStore interface {
 
 //struct
 
-type MongoRoomStore struct {
+type mongoRoomStore struct {
 	client     *mongo.Client
 	coll       *mongo.Collection
 	hotelStore HotelStore
 }
 
 // function
-func NewMongoRoomStore(client *mongo.Client, dbname string, hotelStore HotelStore) *MongoRoomStore {
-	return &MongoRoomStore{
+func NewMongoRoomStore(client *mongo.Client, dbname string, hotelStore HotelStore) *mongoRoomStore {
+	return &mongoRoomStore{
 		client:     client,
 		coll:       client.Database(dbname).Collection(roomColl),
 		hotelStore: hotelStore,
@@ -35,7 +35,7 @@ func NewMongoRoomStore(client *mongo.Client, dbname string, hotelStore HotelStor
 }
 
 // implement
-func (s *MongoRoomStore) CreateRoom(ctx context.Context, room *types.Room) (*types.Room, error) {
+func (s *mongoRoomStore) CreateRoom(ctx context.Context, room *types.Room) (*types.Room, error) {
 	resp, err := s.coll.InsertOne(ctx, room)
 	if err != nil {
 		return nil, err
@@ -53,7 +53,7 @@ func (s *MongoRoomStore) CreateRoom(ctx context.Context, room *types.Room) (*typ
 	return room, nil
 }
 
-func (s *MongoRoomStore) GetRooms(ctx context.Context, filter bson.M) ([]*types.Room, error) {
+func (s *mongoRoomStore) GetRooms(ctx context.Context, filter bson.M) ([]*types.Room, error) {
 	resp, err := s.coll.Find(ctx, filter)
 	if err != nil {
 		return nil, err
