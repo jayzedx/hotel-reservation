@@ -35,3 +35,9 @@ export JWT_SECRET=adsdsadasdasdasdasd22132das
 echo $JWT_SECRET //You can verify that the environment 
 
 
+### configure ###
+go get github.com/spf13/viper
+
+### log ###
+go get -u go.uber.org/zap
+

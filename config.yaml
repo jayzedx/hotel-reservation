@@ -1,0 +1,11 @@
+app:
+  port: 5000
+
+db:
+  database: hotel-reservation
+  uri: mongodb://localhost:27017
+
+test_db:
+  database: hotel-reservation-test
+  uri: mongodb://localhost:27017
+
