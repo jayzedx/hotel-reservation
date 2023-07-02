@@ -196,19 +196,7 @@ func (s *hotelService) UpdateHotel(id string, params UpdateHotelParams) (*HotelR
 		errors = map[string]string{}
 		filter = bson.M{"_id": oid}
 	)
-	// 1) create rooms by hotel id
-	// 1.1) validate data for creating new room
 
-	// 2) update exist rooms by hotel id
-	// 2.1) check exists room id
-
-	// update := bson.M{"$push": bson.M{"rooms": params.Rooms}}
-	// if err := s.hotelRepository.UpdateRooms(filter, update); err != nil {
-	// 	return nil, err
-	// }
-
-	// 3) update hotel by hotel id
-	// 3.1) validate data for updating hotel
 	if errors = params.Validate(); len(errors) > 0 {
 		return nil, errs.AppError{
 			Code:    http.StatusBadRequest,
@@ -217,14 +205,11 @@ func (s *hotelService) UpdateHotel(id string, params UpdateHotelParams) (*HotelR
 		}
 	}
 	updateHotel := util.ToBSON(params)
-	// fmt.Println(updateHotel)
-	// fmt.Println(filter)
 	if err = s.hotelRepository.UpdateHotel(filter, updateHotel); err != nil {
 		logs.Error(err)
 		return nil, err
 	}
 
-	// 4) query hotel by id
 	hotelResponse, err := s.GetHotelRooms(id)
 	if err != nil {
 		return nil, err

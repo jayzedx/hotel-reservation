@@ -40,11 +40,9 @@ type CreateHotelParams struct {
 }
 
 type UpdateHotelParams struct {
-	Name        string               `json:"name"`
-	Location    string               `json:"location"`
-	Rating      int                  `json:"rating"`
-	Rooms       []primitive.ObjectID `json:"rooms"`        // update exists rooms
-	CreateRooms []CreateRoomParams   `json:"create_rooms"` // create new rooms
+	Name     string `json:"name"`
+	Location string `json:"location"`
+	Rating   int    `json:"rating"`
 }
 
 func (params CreateHotelParams) Validate() map[string]string {
