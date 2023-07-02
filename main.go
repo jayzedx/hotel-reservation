@@ -67,8 +67,7 @@ func main() {
 
 	// hotel handlers
 	apiv1.Get("/hotels/**", hotelHandler.HandleGetHotels)
-	apiv1.Get("/hotel/:id/*", hotelHandler.HandleGetHotelRooms)
-	// apiv1.Get("/hotel/:id", hotelHandler.HandleGetHotel) // not used
+	apiv1.Get("/hotel/:id/*", hotelHandler.HandleGetHotel)
 	apiv1.Post("/hotel", hotelHandler.HandlePostHotel)
 	apiv1.Put("/hotel/:id", hotelHandler.HandlePutHotel)
 

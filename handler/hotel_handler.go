@@ -47,23 +47,6 @@ func (h *hotelHandler) HandleGetHotels(ctx *fiber.Ctx) error {
 
 func (h *hotelHandler) HandleGetHotel(ctx *fiber.Ctx) error {
 	id := ctx.Params("id")
-	hotel, err := h.hotelService.GetHotelById(id)
-	if err != nil {
-		appErr, ok := err.(errs.AppError)
-		if ok {
-			return appErr
-		}
-	}
-	return ctx.Status(http.StatusOK).JSON(resp.Response{
-		Code:    http.StatusOK,
-		Status:  "success",
-		Message: "Operation completed successfully",
-		Data:    hotel,
-	})
-}
-
-func (h *hotelHandler) HandleGetHotelRooms(ctx *fiber.Ctx) error {
-	id := ctx.Params("id")
 	hotel, err := h.hotelService.GetHotelRooms(id)
 	if err != nil {
 		appErr, ok := err.(errs.AppError)

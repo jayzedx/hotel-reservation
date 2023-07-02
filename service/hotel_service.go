@@ -90,33 +90,6 @@ func (s *hotelService) GetHotels(params repo.Hotel) ([]*HotelResponse, error) {
 	return data, nil
 }
 
-func (s *hotelService) GetHotelById(id string) (*HotelByIdResponse, error) {
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid id provided. Please check your input and try again.",
-		}
-	}
-
-	hotel, err := s.hotelRepository.GetHotelById(oid)
-	if err != nil {
-		logs.Error(err)
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
-		}
-	}
-
-	data := &HotelByIdResponse{
-		Id:       hotel.Id,
-		Name:     hotel.Name,
-		Location: hotel.Location,
-		Rating:   hotel.Rating,
-	}
-	return data, nil
-}
-
 func (s *hotelService) GetHotelRooms(id string) (*HotelResponse, error) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {

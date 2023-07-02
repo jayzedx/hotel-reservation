@@ -6,7 +6,6 @@ import (
 )
 
 type HotelService interface {
-	GetHotelById(id string) (*HotelByIdResponse, error)
 	GetHotelRooms(id string) (*HotelResponse, error)
 	GetHotels(params repo.Hotel) ([]*HotelResponse, error)
 	CreateHotel(params CreateHotelParams) (*HotelResponse, error)
@@ -22,14 +21,6 @@ type HotelResponse struct {
 	Rating     int                  `json:"rating"`
 	Rooms      []primitive.ObjectID `json:"rooms"`
 	HotelRooms []*repo.Room         `json:"hotel_rooms"`
-}
-
-// GetHotelById
-type HotelByIdResponse struct {
-	Id       primitive.ObjectID `json:"id,omitempty"`
-	Name     string             `json:"name"`
-	Location string             `json:"location"`
-	Rating   int                `json:"rating"`
 }
 
 type CreateHotelParams struct {
