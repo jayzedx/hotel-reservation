@@ -10,7 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jayzedx/hotel-reservation/handler"
 	"github.com/jayzedx/hotel-reservation/logs"
-	"github.com/jayzedx/hotel-reservation/repository"
+	"github.com/jayzedx/hotel-reservation/repo"
 	"github.com/jayzedx/hotel-reservation/resp"
 	"github.com/jayzedx/hotel-reservation/service"
 	"github.com/spf13/viper"
@@ -37,9 +37,17 @@ func main() {
 	// flag.Parse()
 
 	var (
-		userRepository = repository.NewUserRepository(client, DB_NAME)
-		userService    = service.NewUserService(userRepository)
-		userHandler    = handler.NewUserHandler(userService)
+		userRepository  = repo.NewUserRepository(client, DB_NAME)
+		roomRepository  = repo.NewRoomRepository(client, DB_NAME)
+		hotelRepository = repo.NewHotelRepository(client, DB_NAME)
+
+		userService  = service.NewUserService(userRepository)
+		hotelService = service.NewHotelService(hotelRepository, roomRepository)
+		roomService  = service.NewRoomService(roomRepository)
+
+		userHandler  = handler.NewUserHandler(userService)
+		hotelHandler = handler.NewHotelHandler(hotelService)
+		roomHandler  = handler.NewRoomHandler(roomService)
 
 		app = fiber.New(config)
 		// auth  = app.Group("/api")
@@ -51,16 +59,24 @@ func main() {
 	// auth.Post("/auth", authHandler.HandleAuthenticate)
 
 	// user handlers
-	apiv1.Get("/users", userHandler.HandleGetUserRoute)
+	apiv1.Get("/users/**", userHandler.HandleGetUsersByParams)
 	apiv1.Get("/user/:id", userHandler.HandleGetUser)
 	apiv1.Post("/user", userHandler.HandlePostUser)
 	apiv1.Delete("/user/:id", userHandler.HandleDeleteUser)
 	apiv1.Put("/user/:id", userHandler.HandlePutUser)
 
 	// hotel handlers
-	// apiv1.Get("/hotel", hotelHandler.HandleGetHotels)
-	// apiv1.Get("/hotel/:id/room", hotelHandler.HandleGetHotel)
-	// apiv1.Get("/hotel/:id", hotelHandler.HandleGetHotel)
+	apiv1.Get("/hotels/**", hotelHandler.HandleGetHotels)
+	apiv1.Get("/hotel/:id/*", hotelHandler.HandleGetHotelRooms)
+	// apiv1.Get("/hotel/:id", hotelHandler.HandleGetHotel) // not used
+	apiv1.Post("/hotel", hotelHandler.HandlePostHotel)
+	apiv1.Put("/hotel/:id", hotelHandler.HandlePutHotel)
+
+	// room handlers
+	apiv1.Post("/room", roomHandler.HandlePostRoom)
+	apiv1.Put("/room", roomHandler.HandlePutRoom)
+
+	// apiv1.Delete("/room", roomHandler.HandleDeleteRoom)
 
 	logs.Info("App service start at port " + viper.GetString("app.port"))
 	app.Listen(PORT)

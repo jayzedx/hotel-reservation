@@ -2,21 +2,24 @@ package service
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
+	"reflect"
 
 	"github.com/jayzedx/hotel-reservation/errs"
 	"github.com/jayzedx/hotel-reservation/logs"
-	"github.com/jayzedx/hotel-reservation/repository"
+	"github.com/jayzedx/hotel-reservation/repo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type userService struct {
-	userRepository repository.UserRepository
+	userRepository repo.UserRepository
 }
 
-func NewUserService(userRepository repository.UserRepository) *userService {
+func NewUserService(userRepository repo.UserRepository) *userService {
 	return &userService{
 		userRepository: userRepository,
 	}
@@ -36,19 +39,31 @@ func (s *userService) GetUserById(id string) (*UserResponse, error) {
 		logs.Error(err)
 		return nil, err
 	}
-	return MapToUserResponse(user), nil
+
+	data := &UserResponse{
+		Id:        user.Id,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+	}
+	return data, nil
 }
 
 func (s *userService) GetUsers() ([]*UserResponse, error) {
-	users, err := s.userRepository.GetUsers()
+	users, err := s.userRepository.GetUsers(bson.M{})
 	if err != nil {
 		logs.Error(err)
 		return nil, err
 	}
 
-	data := make([]*UserResponse, 0)
+	data := []*UserResponse{}
 	for _, user := range users {
-		data = append(data, MapToUserResponse(user))
+		data = append(data, &UserResponse{
+			Id:        user.Id,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			Email:     user.Email,
+		})
 	}
 	return data, nil
 }
@@ -62,7 +77,7 @@ func (s *userService) CreateUser(params CreateUserParams) (*UserResponse, error)
 		}
 	}
 
-	user, err := NewUserFromParams(params)
+	user, err := CreateUserFromParams(params)
 	if err != nil {
 		logs.Error(err)
 		return nil, err
@@ -73,9 +88,13 @@ func (s *userService) CreateUser(params CreateUserParams) (*UserResponse, error)
 		return nil, err
 	}
 
-	return MapToUserResponse(&repository.User{
-		Id: user.Id,
-	}), nil
+	data := &UserResponse{
+		Id:        user.Id,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+	}
+	return data, nil
 }
 
 func (s *userService) UpdateUser(userId string, params UpdateUserParams) error {
@@ -83,14 +102,14 @@ func (s *userService) UpdateUser(userId string, params UpdateUserParams) error {
 	if err != nil {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid user id provided.",
+			Message: "Invalid id provided. Please check your input and try again.",
 		}
 	}
 
 	if errors := params.Validate(); len(errors) > 0 {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided.",
+			Message: "Invalid data provided. Please check your input and try again.",
 			Errors:  errors,
 		}
 	}
@@ -116,7 +135,7 @@ func (s *userService) DeleteUser(userId string) error {
 	if err != nil {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
+			Message: "Invalid id provided. Please check your input and try again.",
 		}
 	}
 
@@ -133,16 +152,12 @@ func (s *userService) DeleteUser(userId string) error {
 	return nil
 }
 
-func (s *userService) GetUserByEmail(params UserQueryParams) (*UserResponse, error) {
-	var email = params.Email
-	if email == "" {
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Your email is empty.",
-		}
-	}
+// seach with regex by params
+func (s *userService) GetUsersByParams(params repo.User) ([]*UserResponse, error) {
 
-	user, err := s.userRepository.GetUserByEmail(email)
+	filter := createSearchFilter(params)
+
+	users, err := s.userRepository.GetUsers(filter)
 	if err != nil {
 		if err != mongo.ErrNoDocuments {
 			logs.Error(err)
@@ -152,7 +167,16 @@ func (s *userService) GetUserByEmail(params UserQueryParams) (*UserResponse, err
 		}
 	}
 
-	return MapToUserResponse(user), nil
+	data := []*UserResponse{}
+	for _, user := range users {
+		data = append(data, &UserResponse{
+			Id:        user.Id,
+			FirstName: user.FirstName,
+			LastName:  user.LastName,
+			Email:     user.Email,
+		})
+	}
+	return data, nil
 }
 
 func (s *userService) Drop() error {
@@ -161,4 +185,53 @@ func (s *userService) Drop() error {
 		return err
 	}
 	return nil
+}
+
+func createSearchFilter(params repo.User) bson.M {
+	var filter = bson.M{}
+
+	val := reflect.ValueOf(params)
+	typ := val.Type()
+	for i := 0; i < typ.NumField(); i++ {
+		field := typ.Field(i)
+		tagName := field.Tag.Get("bson")
+		fieldValue := val.Field(i).Interface()
+		if fieldValue == "" {
+			continue
+		}
+
+		id, ok := fieldValue.(primitive.ObjectID)
+		if ok {
+			if id.IsZero() {
+				continue
+			} else {
+				objId, err := primitive.ObjectIDFromHex(id.Hex())
+				if err != nil {
+					continue
+				}
+				filter[tagName] = bson.M{
+					"$eq": objId,
+				}
+				continue
+			}
+		}
+
+		filter[tagName] = bson.M{
+			"$regex": fmt.Sprintf(".*%s.*", fieldValue),
+		}
+	}
+	return filter
+}
+
+func CreateUserFromParams(params CreateUserParams) (*repo.User, error) {
+	encp, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcryptCost)
+	if err != nil {
+		return nil, err
+	}
+	return &repo.User{
+		FirstName:         params.FirstName,
+		LastName:          params.LastName,
+		Email:             params.Email,
+		EncryptedPassword: string(encp),
+	}, nil
 }

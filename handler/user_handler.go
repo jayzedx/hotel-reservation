@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jayzedx/hotel-reservation/errs"
+	"github.com/jayzedx/hotel-reservation/repo"
 	"github.com/jayzedx/hotel-reservation/resp"
 	"github.com/jayzedx/hotel-reservation/service"
 )
@@ -23,7 +24,7 @@ func (h *userHandler) HandleGetUser(ctx *fiber.Ctx) error {
 	var (
 		id = ctx.Params("id")
 	)
-	user, err := h.userService.GetUserById(id)
+	data, err := h.userService.GetUserById(id)
 
 	if err != nil {
 		appErr, ok := err.(errs.AppError)
@@ -36,12 +37,13 @@ func (h *userHandler) HandleGetUser(ctx *fiber.Ctx) error {
 		Code:    http.StatusOK,
 		Status:  "success",
 		Message: "Operation completed successfully",
-		Data:    user,
+		Data:    data,
 	})
 }
 
+/*
 func (h *userHandler) HandleGetUsers(ctx *fiber.Ctx) error {
-	users, err := h.userService.GetUsers()
+	data, err := h.userService.GetUsers()
 	if err != nil {
 		appErr, ok := err.(errs.AppError)
 		if ok {
@@ -53,16 +55,20 @@ func (h *userHandler) HandleGetUsers(ctx *fiber.Ctx) error {
 		Code:    http.StatusOK,
 		Status:  "success",
 		Message: "Operation completed successfully",
-		Data:    users,
+		Data:    data,
 	})
 }
+*/
 
 func (h *userHandler) HandlePostUser(ctx *fiber.Ctx) error {
 	var params service.CreateUserParams
 	if err := ctx.BodyParser(&params); err != nil {
-		return err
+		return errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid data provided. Please check your input and try again.",
+		}
 	}
-	userResponse, err := h.userService.CreateUser(params)
+	data, err := h.userService.CreateUser(params)
 	if err != nil {
 		appErr, ok := err.(errs.AppError)
 		if ok {
@@ -75,7 +81,7 @@ func (h *userHandler) HandlePostUser(ctx *fiber.Ctx) error {
 		Code:    http.StatusCreated,
 		Status:  "success",
 		Message: "Operation completed successfully",
-		Data:    userResponse,
+		Data:    data,
 	})
 }
 
@@ -122,12 +128,15 @@ func (h *userHandler) HandleDeleteUser(ctx *fiber.Ctx) error {
 	})
 }
 
-func (h *userHandler) HandleGetUserByEmail(ctx *fiber.Ctx) error {
-	var params service.UserQueryParams
+func (h *userHandler) HandleGetUsersByParams(ctx *fiber.Ctx) error {
+	var params repo.User
 	if err := ctx.QueryParser(&params); err != nil {
-		return err
+		return errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid data provided. Please check your input and try again.",
+		}
 	}
-	user, err := h.userService.GetUserByEmail(params)
+	data, err := h.userService.GetUsersByParams(params)
 	if err != nil {
 		appErr, ok := err.(errs.AppError)
 		if ok {
@@ -138,13 +147,6 @@ func (h *userHandler) HandleGetUserByEmail(ctx *fiber.Ctx) error {
 		Code:    http.StatusOK,
 		Status:  "success",
 		Message: "Operation completed successfully",
-		Data:    user,
+		Data:    data,
 	})
-}
-
-func (h *userHandler) HandleGetUserRoute(ctx *fiber.Ctx) error {
-	if email := ctx.Query("email"); email != "" {
-		return h.HandleGetUserByEmail(ctx)
-	}
-	return h.HandleGetUsers(ctx)
 }

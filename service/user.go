@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/jayzedx/hotel-reservation/repository"
+	"github.com/jayzedx/hotel-reservation/repo"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
@@ -17,8 +17,15 @@ type UserService interface {
 	CreateUser(params CreateUserParams) (*UserResponse, error)
 	UpdateUser(id string, params UpdateUserParams) error
 	DeleteUser(id string) error
-	GetUserByEmail(params UserQueryParams) (*UserResponse, error)
+	GetUsersByParams(params repo.User) ([]*UserResponse, error)
 	Drop() error
+}
+
+type UserResponse struct {
+	Id        primitive.ObjectID `json:"id,omitempty"`
+	FirstName string             `json:"firstName""`
+	LastName  string             `json:"lastName""`
+	Email     string             `json:"email"`
 }
 
 type CreateUserParams struct {
@@ -33,27 +40,6 @@ type UpdateUserParams struct {
 	LastName  string `json:"lastName"`
 }
 
-type UserQueryParams struct {
-	Email string `json:"email"`
-}
-
-type UserResponse struct {
-	Id        primitive.ObjectID `json:"id,omitempty"` //omitempty - don't show json when id is empty
-	FirstName string             `json:"firstName,omitempty"`
-	LastName  string             `json:"lastName,omitempty"`
-	Email     string             `json:"email,omitempty"`
-}
-
-func MapToUserResponse(user *repository.User) *UserResponse {
-	return &UserResponse{
-		Id:        user.Id,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-	}
-}
-
-// validation
 const (
 	bcryptCost      = 12
 	minFirstNameLen = 2
@@ -61,7 +47,6 @@ const (
 	minPasswordLen  = 7
 )
 
-// validation for create
 func (params CreateUserParams) Validate() map[string]string {
 	errors := map[string]string{}
 	if len(params.FirstName) < minFirstNameLen {
@@ -75,6 +60,17 @@ func (params CreateUserParams) Validate() map[string]string {
 	}
 	if !isEmailValid(params.Email) {
 		errors["email"] = fmt.Sprintf("Email is invalid")
+	}
+	return errors
+}
+
+func (params UpdateUserParams) Validate() map[string]string {
+	errors := map[string]string{}
+	if len(params.FirstName) < minFirstNameLen {
+		errors["firstName"] = fmt.Sprintf("firstName length should be at least %d characters", minFirstNameLen)
+	}
+	if len(params.LastName) < minFirstNameLen {
+		errors["lastName"] = fmt.Sprintf("lastName length should be at least %d characters", minLastNameLen)
 	}
 	return errors
 }
@@ -95,34 +91,9 @@ func ToBSON(data interface{}) bson.M {
 	jsonData, _ := json.Marshal(data)
 	json.Unmarshal(jsonData, &dataMap)
 
-	// Iterate over the map using for range loop
 	for key, value := range dataMap {
 		// fmt.Printf("Key: %s, Value: %v\n", key, value)
 		m[key] = value
 	}
 	return m
-}
-
-func (params UpdateUserParams) Validate() map[string]string {
-	errors := map[string]string{}
-	if len(params.FirstName) < minFirstNameLen {
-		errors["firstName"] = fmt.Sprintf("firstName length should be at least %d characters", minFirstNameLen)
-	}
-	if len(params.LastName) < minFirstNameLen {
-		errors["lastName"] = fmt.Sprintf("lastName length should be at least %d characters", minLastNameLen)
-	}
-	return errors
-}
-
-func NewUserFromParams(params CreateUserParams) (*repository.User, error) {
-	encp, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcryptCost)
-	if err != nil {
-		return nil, err
-	}
-	return &repository.User{
-		FirstName:         params.FirstName,
-		LastName:          params.LastName,
-		Email:             params.Email,
-		EncryptedPassword: string(encp),
-	}, nil
 }
