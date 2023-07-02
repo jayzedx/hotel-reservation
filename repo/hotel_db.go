@@ -66,17 +66,3 @@ func (r *hotelRepository) UpdateHotel(filter bson.M, params bson.M) error {
 	}
 	return nil
 }
-
-func (r *hotelRepository) UpdateRooms(filter bson.M, params bson.M) error {
-	update := bson.D{
-		{
-			Key:   "$set",
-			Value: params,
-		},
-	}
-	_, err := r.coll.UpdateOne(r.ctx, filter, update)
-	if err != nil {
-		return err
-	}
-	return nil
-}

@@ -70,12 +70,12 @@ func main() {
 	apiv1.Get("/hotel/:id/*", hotelHandler.HandleGetHotel)
 	apiv1.Post("/hotel", hotelHandler.HandlePostHotel)
 	apiv1.Put("/hotel/:id", hotelHandler.HandlePutHotel)
+	// apiv1.Delete("/hotel/:id", roomHandler.HandleDeleteHotel)
 
 	// room handlers
 	apiv1.Post("/room", roomHandler.HandlePostRoom)
-	apiv1.Put("/room", roomHandler.HandlePutRoom)
-
-	// apiv1.Delete("/room", roomHandler.HandleDeleteRoom)
+	apiv1.Put("/room/:id", roomHandler.HandlePutRoom)
+	// apiv1.Delete("/room/:id", roomHandler.HandleDeleteRoom)
 
 	logs.Info("App service start at port " + viper.GetString("app.port"))
 	app.Listen(PORT)

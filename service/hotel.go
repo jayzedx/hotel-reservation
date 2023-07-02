@@ -10,7 +10,7 @@ type HotelService interface {
 	GetHotels(params repo.Hotel) ([]*HotelResponse, error)
 	CreateHotel(params CreateHotelParams) (*HotelResponse, error)
 	UpdateHotel(id string, params UpdateHotelParams) (*HotelResponse, error)
-	DeleteHotel(id string) error
+	UpdateRooms(id string) error
 }
 
 // GetHotels, GetHotelRooms

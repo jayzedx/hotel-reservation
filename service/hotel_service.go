@@ -190,6 +190,7 @@ func (s *hotelService) UpdateHotel(id string, params UpdateHotelParams) (*HotelR
 
 	return hotelResponse, nil
 }
-func (s *hotelService) DeleteHotel(id string) error {
+
+func (s *hotelService) UpdateRooms(id string) error {
 	return nil
 }

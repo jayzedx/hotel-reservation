@@ -18,5 +18,4 @@ type HotelRepository interface {
 	GetHotelById(primitive.ObjectID) (*Hotel, error)
 	CreateHotel(*Hotel) error
 	UpdateHotel(filter bson.M, params bson.M) error
-	UpdateRooms(filter bson.M, params bson.M) error
 }

@@ -14,10 +14,9 @@ func NewRoomService(roomRepository repo.RoomRepository) *roomService {
 	}
 }
 
-func (s *roomService) GetRoomById(id string) (*RoomResponse, error) {
-	return nil, nil
-}
 func (s *roomService) CreateRoom(params CreateRoomParams) (*RoomResponse, error) {
+	//1) validation
+	//2) update room in hotel collection
 	return nil, nil
 }
 func (s *roomService) UpdateRoom(id string, params UpdateRoomParams) (*RoomResponse, error) {

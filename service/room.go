@@ -6,7 +6,6 @@ import (
 )
 
 type RoomService interface {
-	GetRoomById(id string) (*RoomResponse, error)
 	CreateRoom(params CreateRoomParams) (*RoomResponse, error)
 	UpdateRoom(id string, params UpdateRoomParams) (*RoomResponse, error)
 	DeleteRoom(id string) error
