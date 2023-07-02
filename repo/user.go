@@ -10,7 +10,7 @@ type User struct {
 	FirstName         string             `bson:"firstName" query:"firstName"`
 	LastName          string             `bson:"lastName" query:"lastName"`
 	Email             string             `bson:"email" query:"-"`
-	EncryptedPassword string             `bson:"EncryptedPassword" query:"-"`
+	EncryptedPassword string             `bson:"encryptedPassword" query:"-"`
 }
 
 type UserRepository interface {

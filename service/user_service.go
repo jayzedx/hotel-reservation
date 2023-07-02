@@ -9,6 +9,7 @@ import (
 	"github.com/jayzedx/hotel-reservation/errs"
 	"github.com/jayzedx/hotel-reservation/logs"
 	"github.com/jayzedx/hotel-reservation/repo"
+	"github.com/jayzedx/hotel-reservation/util"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -72,7 +73,7 @@ func (s *userService) CreateUser(params CreateUserParams) (*UserResponse, error)
 	if errors := params.Validate(); len(errors) > 0 {
 		return nil, errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided.",
+			Message: "Validation errors. Please check your input and try again.",
 			Errors:  errors,
 		}
 	}
@@ -109,13 +110,13 @@ func (s *userService) UpdateUser(userId string, params UpdateUserParams) error {
 	if errors := params.Validate(); len(errors) > 0 {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
+			Message: "Validation errors. Please check your input and try again.",
 			Errors:  errors,
 		}
 	}
 
 	filter := bson.M{"_id": oid}
-	values := ToBSON(params)
+	values := util.ToBSON(params)
 
 	if length := len(values); length <= 0 {
 		return errs.AppError{

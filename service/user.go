@@ -1,12 +1,10 @@
 package service
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 
 	"github.com/jayzedx/hotel-reservation/repo"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -66,12 +64,14 @@ func (params CreateUserParams) Validate() map[string]string {
 
 func (params UpdateUserParams) Validate() map[string]string {
 	errors := map[string]string{}
-	if len(params.FirstName) < minFirstNameLen {
+	if len(params.FirstName) > 0 && len(params.FirstName) < minFirstNameLen {
 		errors["firstName"] = fmt.Sprintf("firstName length should be at least %d characters", minFirstNameLen)
 	}
-	if len(params.LastName) < minFirstNameLen {
+
+	if len(params.LastName) > 0 && len(params.LastName) < minFirstNameLen {
 		errors["lastName"] = fmt.Sprintf("lastName length should be at least %d characters", minLastNameLen)
 	}
+
 	return errors
 }
 
@@ -82,18 +82,4 @@ func isEmailValid(e string) bool {
 
 func IsValidPassword(encpw string, pw string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(encpw), []byte(pw)) == nil
-}
-
-func ToBSON(data interface{}) bson.M {
-	m := bson.M{}
-	dataMap := make(map[string]interface{})
-
-	jsonData, _ := json.Marshal(data)
-	json.Unmarshal(jsonData, &dataMap)
-
-	for key, value := range dataMap {
-		// fmt.Printf("Key: %s, Value: %v\n", key, value)
-		m[key] = value
-	}
-	return m
 }

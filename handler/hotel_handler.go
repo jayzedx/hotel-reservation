@@ -119,6 +119,7 @@ func (h *hotelHandler) HandlePutHotel(ctx *fiber.Ctx) error {
 		if ok {
 			return appErr
 		}
+		return err
 	}
 	return ctx.Status(http.StatusOK).JSON(resp.Response{
 		Code:    http.StatusOK,

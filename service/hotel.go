@@ -19,7 +19,7 @@ type HotelResponse struct {
 	Id         primitive.ObjectID   `json:"id,omitempty"`
 	Name       string               `json:"name"`
 	Location   string               `json:"location"`
-	Rating     int                  `bjson:"rating"`
+	Rating     int                  `json:"rating"`
 	Rooms      []primitive.ObjectID `json:"rooms"`
 	HotelRooms []*repo.Room         `json:"hotel_rooms"`
 }
@@ -33,9 +33,10 @@ type HotelByIdResponse struct {
 }
 
 type CreateHotelParams struct {
-	Name     string `json:"name"`
-	Location string `json:"location"`
-	Rating   int    `json:"rating"`
+	Name     string               `json:"name"`
+	Location string               `json:"location"`
+	Rating   int                  `json:"rating"`
+	Rooms    []primitive.ObjectID `json:"rooms"`
 }
 
 type UpdateHotelParams struct {
@@ -44,4 +45,14 @@ type UpdateHotelParams struct {
 	Rating      int                  `json:"rating"`
 	Rooms       []primitive.ObjectID `json:"rooms"`        // update exists rooms
 	CreateRooms []CreateRoomParams   `json:"create_rooms"` // create new rooms
+}
+
+func (params CreateHotelParams) Validate() map[string]string {
+	errors := map[string]string{}
+	return errors
+}
+
+func (params UpdateHotelParams) Validate() map[string]string {
+	errors := map[string]string{}
+	return errors
 }
