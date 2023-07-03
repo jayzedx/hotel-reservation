@@ -1,23 +1,19 @@
 package util
 
 import (
-	"encoding/json"
-
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func ToBSON(data interface{}) bson.M {
-	m := bson.M{}
-	dataMap := make(map[string]interface{})
-
-	jsonData, _ := json.Marshal(data)
-	json.Unmarshal(jsonData, &dataMap)
-
-	for key, value := range dataMap {
-		// fmt.Printf("Key: %s, Value: %v\n", key, value)
-		if value != nil && value != "" {
-			m[key] = value
-		}
+func ConvertToBsonM(data interface{}) (bson.M, error) {
+	bsonData, err := bson.Marshal(data)
+	if err != nil {
+		return nil, err
 	}
-	return m
+	var bsonM bson.M
+	err = bson.Unmarshal(bsonData, &bsonM)
+	if err != nil {
+		return nil, err
+	}
+
+	return bsonM, nil
 }

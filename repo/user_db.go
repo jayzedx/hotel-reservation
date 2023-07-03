@@ -57,18 +57,12 @@ func (r *userRepository) CreateUser(user *User) error {
 	return nil
 }
 
-func (r *userRepository) UpdateUser(filter bson.M, params bson.M) error {
-	update := bson.D{
-		{
-			Key:   "$set",
-			Value: params,
-		},
-	}
-	_, err := r.coll.UpdateOne(r.ctx, filter, update)
+func (r *userRepository) UpdateUser(filter bson.M, update bson.M) (int64, error) {
+	res, err := r.coll.UpdateOne(r.ctx, filter, update)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return res.ModifiedCount, nil
 }
 
 func (r *userRepository) DeleteUser(id primitive.ObjectID) error {
@@ -77,7 +71,7 @@ func (r *userRepository) DeleteUser(id primitive.ObjectID) error {
 		return err
 	}
 	if res.DeletedCount == 0 {
-		return mongo.ErrNoDocuments //fmt.Errorf("user not found")
+		return mongo.ErrNoDocuments
 	}
 	return nil
 }

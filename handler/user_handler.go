@@ -24,14 +24,15 @@ func (h *userHandler) HandleGetUser(ctx *fiber.Ctx) error {
 	var (
 		id = ctx.Params("id")
 	)
-	data, err := h.userService.GetUserById(id)
 
+	data, err := h.userService.GetUserById(id)
 	if err != nil {
 		appErr, ok := err.(errs.AppError)
 		if ok {
 			return appErr
+		} else {
+			return err
 		}
-		return err
 	}
 	return ctx.Status(http.StatusOK).JSON(resp.Response{
 		Code:    http.StatusOK,
@@ -48,8 +49,12 @@ func (h *userHandler) HandleGetUsers(ctx *fiber.Ctx) error {
 		appErr, ok := err.(errs.AppError)
 		if ok {
 			return appErr
+		} else {
+			return errs.AppError{
+				Code:    http.StatusBadRequest,
+				Message: "Unexpected error",
+			}
 		}
-		return err
 	}
 	return ctx.Status(http.StatusOK).JSON(resp.Response{
 		Code:    http.StatusOK,
@@ -65,7 +70,7 @@ func (h *userHandler) HandlePostUser(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&params); err != nil {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
+			Message: "Invalid data provided",
 		}
 	}
 	data, err := h.userService.CreateUser(params)
@@ -73,8 +78,9 @@ func (h *userHandler) HandlePostUser(ctx *fiber.Ctx) error {
 		appErr, ok := err.(errs.AppError)
 		if ok {
 			return appErr
+		} else {
+			return err
 		}
-		return err
 	}
 
 	return ctx.Status(http.StatusOK).JSON(resp.Response{
@@ -90,15 +96,20 @@ func (h *userHandler) HandlePutUser(ctx *fiber.Ctx) error {
 		id     = ctx.Params("id")
 		params service.UpdateUserParams
 	)
+
 	if err := ctx.BodyParser(&params); err != nil {
-		return err
+		return errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid data provided",
+		}
 	}
 	if err := h.userService.UpdateUser(id, params); err != nil {
 		appErr, ok := err.(errs.AppError)
 		if ok {
 			return appErr
+		} else {
+			return err
 		}
-		return err
 	}
 
 	return ctx.Status(http.StatusOK).JSON(resp.Response{
@@ -117,8 +128,9 @@ func (h *userHandler) HandleDeleteUser(ctx *fiber.Ctx) error {
 		appErr, ok := err.(errs.AppError)
 		if ok {
 			return appErr
+		} else {
+			return err
 		}
-		return err
 	}
 	return ctx.Status(http.StatusOK).JSON(resp.Response{
 		Code:    http.StatusOK,
@@ -133,7 +145,7 @@ func (h *userHandler) HandleGetUsersByParams(ctx *fiber.Ctx) error {
 	if err := ctx.QueryParser(&params); err != nil {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
+			Message: "Invalid data provided",
 		}
 	}
 	data, err := h.userService.GetUsersByParams(params)
@@ -141,6 +153,8 @@ func (h *userHandler) HandleGetUsersByParams(ctx *fiber.Ctx) error {
 		appErr, ok := err.(errs.AppError)
 		if ok {
 			return appErr
+		} else {
+			return err
 		}
 	}
 	return ctx.Status(http.StatusOK).JSON(resp.Response{

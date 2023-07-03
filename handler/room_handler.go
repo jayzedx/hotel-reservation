@@ -24,14 +24,17 @@ func (h *roomHandler) HandlePostRoom(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&params); err != nil {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
+			Message: "Invalid data provided",
 		}
 	}
+
 	room, err := h.roomService.CreateRoom(params)
 	if err != nil {
 		appErr, ok := err.(errs.AppError)
 		if ok {
 			return appErr
+		} else {
+			return err
 		}
 	}
 	return ctx.Status(http.StatusOK).JSON(resp.Response{
@@ -41,6 +44,7 @@ func (h *roomHandler) HandlePostRoom(ctx *fiber.Ctx) error {
 		Data:    room,
 	})
 }
+
 func (h *roomHandler) HandlePutRoom(ctx *fiber.Ctx) error {
 	var (
 		id     = ctx.Params("id")
@@ -49,23 +53,40 @@ func (h *roomHandler) HandlePutRoom(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&params); err != nil {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
+			Message: "Invalid data provided",
 		}
 	}
-	room, err := h.roomService.UpdateRoom(id, params)
-	if err != nil {
+	if err := h.roomService.UpdateRoom(id, params); err != nil {
 		appErr, ok := err.(errs.AppError)
 		if ok {
 			return appErr
+		} else {
+			return err
 		}
 	}
 	return ctx.Status(http.StatusOK).JSON(resp.Response{
 		Code:    http.StatusOK,
 		Status:  "success",
 		Message: "Operation completed successfully",
-		Data:    room,
+		Data:    nil,
 	})
 }
-func (h *roomHandler) HandleDeleteRoom(c *fiber.Ctx) error {
-	return nil
+func (h *roomHandler) HandleDeleteRoom(ctx *fiber.Ctx) error {
+	var (
+		id = ctx.Params("id")
+	)
+	if err := h.roomService.DeleteRoom(id); err != nil {
+		appErr, ok := err.(errs.AppError)
+		if ok {
+			return appErr
+		} else {
+			return err
+		}
+	}
+	return ctx.Status(http.StatusOK).JSON(resp.Response{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "Operation completed successfully",
+		Data:    nil,
+	})
 }

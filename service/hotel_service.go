@@ -31,7 +31,6 @@ func (s *hotelService) GetHotels(params repo.Hotel) ([]*HotelResponse, error) {
 
 	if rating != 0 {
 		filter = bson.M{
-			"rooms": bson.M{"$exists": true},
 			"rating": bson.M{
 				"$eq": rating,
 			},
@@ -42,50 +41,41 @@ func (s *hotelService) GetHotels(params repo.Hotel) ([]*HotelResponse, error) {
 	if err != nil {
 		return nil, errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
+			Message: "Invalid data provided",
 		}
 	}
 
-	matchStage := bson.M{
-		"$match": bson.M{
-			"hotel_id": bson.M{
-				"$exists": true,
+	/*
+		matchStage := bson.M{
+			"$match": bson.M{
+				"hotel_id": bson.M{
+					"$exists": true,
+				},
 			},
-		},
-	}
-	pipeline := []bson.M{
-		matchStage,
-	}
-	rooms, err := s.roomRepository.GetRoomsByPipeline(pipeline)
+		}
+		pipeline := []bson.M{
+			matchStage,
+		}
+		rooms, err := s.roomRepository.GetRoomsByPipeline(pipeline)
+	*/
+	rooms, err := s.roomRepository.GetRooms(bson.M{})
 	if err != nil {
-		logs.Error(err)
 		return nil, errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
+			Message: "Invalid data provided",
 		}
 	}
 
-	roomsByHotel := make(map[primitive.ObjectID][]*repo.Room)
+	// map rooms by hotel id
+	roomsReponse := make(map[primitive.ObjectID][]*RoomResponse)
 	for _, room := range rooms {
-		roomsByHotel[room.HotelId] = append(roomsByHotel[room.HotelId], room)
+		roomsReponse[room.HotelId] = append(roomsReponse[room.HotelId], MapRoomResponse(room))
 	}
 
+	// building response data
 	data := []*HotelResponse{}
 	for _, hotel := range hotels {
-		hotelRooms := roomsByHotel[hotel.Id]
-		if len(hotelRooms) == 0 {
-			hotelRooms = []*repo.Room{}
-		}
-
-		data = append(data,
-			&HotelResponse{
-				Id:         hotel.Id,
-				Name:       hotel.Name,
-				Location:   hotel.Location,
-				Rating:     hotel.Rating,
-				Rooms:      hotel.Rooms,
-				HotelRooms: hotelRooms,
-			})
+		data = append(data, MapHotelResponse(hotel, roomsReponse[hotel.Id]))
 	}
 	return data, nil
 }
@@ -95,102 +85,92 @@ func (s *hotelService) GetHotelRooms(id string) (*HotelResponse, error) {
 	if err != nil {
 		return nil, errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid id provided. Please check your input and try again.",
+			Message: "Invalid id provided",
 		}
 	}
+
 	hotel, err := s.hotelRepository.GetHotelById(oid)
 	if err != nil {
 		logs.Error(err)
 		return nil, errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
+			Message: "Upexpected Error",
 		}
 	}
-	filter := bson.M{
-		"hotel_id": hotel.Id,
-	}
+
+	filter := bson.M{"hotel_id": hotel.Id}
 	rooms, err := s.roomRepository.GetRooms(filter)
 	if err != nil {
 		logs.Error(err)
 		return nil, errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
+			Message: "Upexpected Error",
 		}
 	}
-	hotelRooms := []*repo.Room{}
-	if len(rooms) > 0 {
-		hotelRooms = rooms
+
+	roomsReponse := []*RoomResponse{}
+	for _, room := range rooms {
+		roomsReponse = append(roomsReponse, MapRoomResponse(room))
 	}
 
-	data := &HotelResponse{
-		Id:         hotel.Id,
-		Name:       hotel.Name,
-		Location:   hotel.Location,
-		Rating:     hotel.Rating,
-		Rooms:      hotel.Rooms,
-		HotelRooms: hotelRooms,
-	}
-	return data, nil
+	return MapHotelResponse(hotel, roomsReponse), nil
 }
 
 func (s *hotelService) CreateHotel(params CreateHotelParams) (*HotelResponse, error) {
-	//validation for creating hotel
-	hotel := &repo.Hotel{
-		Name:     params.Name,
-		Location: params.Location,
-		Rating:   params.Rating,
-		Rooms:    []primitive.ObjectID{},
-	}
-	if err := s.hotelRepository.CreateHotel(hotel); err != nil {
-		return nil, err
-	}
-	data := &HotelResponse{
-		Id:         hotel.Id,
-		Name:       hotel.Name,
-		Location:   hotel.Location,
-		Rating:     hotel.Rating,
-		Rooms:      hotel.Rooms,
-		HotelRooms: []*repo.Room{},
-	}
-	return data, nil
-}
-
-func (s *hotelService) UpdateHotel(id string, params UpdateHotelParams) (*HotelResponse, error) {
-
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
+	if errors := params.Validate(); len(errors) > 0 {
 		return nil, errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid id provided. Please check your input and try again.",
-		}
-	}
-
-	var (
-		errors = map[string]string{}
-		filter = bson.M{"_id": oid}
-	)
-
-	if errors = params.Validate(); len(errors) > 0 {
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Validation errors. Please check your input and try again.",
+			Message: "Validation errors",
 			Errors:  errors,
 		}
 	}
-	updateHotel := util.ToBSON(params)
-	if err = s.hotelRepository.UpdateHotel(filter, updateHotel); err != nil {
-		logs.Error(err)
+
+	hotel := CreateHotelFromParams(&params)
+	if err := s.hotelRepository.CreateHotel(hotel); err != nil {
 		return nil, err
 	}
 
-	hotelResponse, err := s.GetHotelRooms(id)
-	if err != nil {
-		return nil, err
-	}
-
-	return hotelResponse, nil
+	return MapHotelResponse(hotel, []*RoomResponse{}), nil
 }
 
-func (s *hotelService) UpdateRooms(id string) error {
+func (s *hotelService) UpdateHotel(id string, params UpdateHotelParams) error {
+	hotelId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid id provided",
+		}
+	}
+
+	// validation
+	if errors := params.Validate(); len(errors) > 0 {
+		return errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Validation errors",
+			Errors:  errors,
+		}
+	}
+
+	dataMap, err := util.ConvertToBsonM(params)
+	if err != nil {
+		return err
+	}
+
+	if len(dataMap) == 0 {
+		return errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "No field to update.",
+		}
+	}
+
+	update := bson.M{
+		"$set": dataMap,
+	}
+	filter := bson.M{"_id": hotelId}
+	if _, err = s.hotelRepository.UpdateHotel(filter, update); err != nil {
+		logs.Error(err)
+		return err
+	}
+
 	return nil
 }

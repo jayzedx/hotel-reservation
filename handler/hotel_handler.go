@@ -26,7 +26,7 @@ func (h *hotelHandler) HandleGetHotels(ctx *fiber.Ctx) error {
 	if err := ctx.QueryParser(&params); err != nil {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
+			Message: "Invalid data provided",
 		}
 	}
 
@@ -35,6 +35,8 @@ func (h *hotelHandler) HandleGetHotels(ctx *fiber.Ctx) error {
 		appErr, ok := err.(errs.AppError)
 		if ok {
 			return appErr
+		} else {
+			return err
 		}
 	}
 	return ctx.Status(http.StatusOK).JSON(resp.Response{
@@ -52,6 +54,8 @@ func (h *hotelHandler) HandleGetHotel(ctx *fiber.Ctx) error {
 		appErr, ok := err.(errs.AppError)
 		if ok {
 			return appErr
+		} else {
+			return err
 		}
 	}
 	return ctx.Status(http.StatusOK).JSON(resp.Response{
@@ -67,7 +71,7 @@ func (h *hotelHandler) HandlePostHotel(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&params); err != nil {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
+			Message: "Invalid data provided",
 		}
 	}
 	hotel, err := h.hotelService.CreateHotel(params)
@@ -75,6 +79,8 @@ func (h *hotelHandler) HandlePostHotel(ctx *fiber.Ctx) error {
 		appErr, ok := err.(errs.AppError)
 		if ok {
 			return appErr
+		} else {
+			return err
 		}
 	}
 	return ctx.Status(http.StatusOK).JSON(resp.Response{
@@ -93,21 +99,21 @@ func (h *hotelHandler) HandlePutHotel(ctx *fiber.Ctx) error {
 	if err := ctx.BodyParser(&params); err != nil {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided. Please check your input and try again.",
+			Message: "Invalid data provided",
 		}
 	}
-	hotel, err := h.hotelService.UpdateHotel(id, params)
-	if err != nil {
+	if err := h.hotelService.UpdateHotel(id, params); err != nil {
 		appErr, ok := err.(errs.AppError)
 		if ok {
 			return appErr
+		} else {
+			return err
 		}
-		return err
 	}
 	return ctx.Status(http.StatusOK).JSON(resp.Response{
 		Code:    http.StatusOK,
 		Status:  "success",
 		Message: "Operation completed successfully",
-		Data:    hotel,
+		Data:    nil,
 	})
 }

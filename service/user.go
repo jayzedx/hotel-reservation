@@ -21,21 +21,21 @@ type UserService interface {
 
 type UserResponse struct {
 	Id        primitive.ObjectID `json:"id,omitempty"`
-	FirstName string             `json:"firstName""`
-	LastName  string             `json:"lastName""`
+	FirstName string             `json:"firstname"`
+	LastName  string             `json:"lastname"`
 	Email     string             `json:"email"`
 }
 
 type CreateUserParams struct {
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
 	Email     string `json:"email"`
 	Password  string `json:"password"`
 }
 
 type UpdateUserParams struct {
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
 }
 
 const (
@@ -48,16 +48,16 @@ const (
 func (params CreateUserParams) Validate() map[string]string {
 	errors := map[string]string{}
 	if len(params.FirstName) < minFirstNameLen {
-		errors["firstName"] = fmt.Sprintf("firstName length should be at least %d characters", minFirstNameLen)
+		errors["firstname"] = fmt.Sprintf("firstname length should be at least %d characters", minFirstNameLen)
 	}
 	if len(params.LastName) < minFirstNameLen {
-		errors["lastName"] = fmt.Sprintf("lastName length should be at least %d characters", minLastNameLen)
+		errors["lastname"] = fmt.Sprintf("lastname length should be at least %d characters", minLastNameLen)
 	}
 	if len(params.Password) < minPasswordLen {
 		errors["password"] = fmt.Sprintf("password length should be at least %d characters", minPasswordLen)
 	}
 	if !isEmailValid(params.Email) {
-		errors["email"] = fmt.Sprintf("Email is invalid")
+		errors["email"] = fmt.Sprintf("email is invalid")
 	}
 	return errors
 }
@@ -65,13 +65,12 @@ func (params CreateUserParams) Validate() map[string]string {
 func (params UpdateUserParams) Validate() map[string]string {
 	errors := map[string]string{}
 	if len(params.FirstName) > 0 && len(params.FirstName) < minFirstNameLen {
-		errors["firstName"] = fmt.Sprintf("firstName length should be at least %d characters", minFirstNameLen)
+		errors["firstname"] = fmt.Sprintf("firstname length should be at least %d characters", minFirstNameLen)
 	}
 
 	if len(params.LastName) > 0 && len(params.LastName) < minFirstNameLen {
-		errors["lastName"] = fmt.Sprintf("lastName length should be at least %d characters", minLastNameLen)
+		errors["lastname"] = fmt.Sprintf("lastname length should be at least %d characters", minLastNameLen)
 	}
-
 	return errors
 }
 
@@ -82,4 +81,33 @@ func isEmailValid(e string) bool {
 
 func IsValidPassword(encpw string, pw string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(encpw), []byte(pw)) == nil
+}
+
+func CreateUserFromParams(params *CreateUserParams) (*repo.User, error) {
+	encp, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcryptCost)
+	if err != nil {
+		return nil, err
+	}
+	return &repo.User{
+		FirstName:         params.FirstName,
+		LastName:          params.LastName,
+		Email:             params.Email,
+		EncryptedPassword: string(encp),
+	}, nil
+}
+
+func UpdateUserFromParams(params *UpdateUserParams) *repo.User {
+	return &repo.User{
+		FirstName: params.FirstName,
+		LastName:  params.LastName,
+	}
+}
+
+func MapUserResponse(user *repo.User) *UserResponse {
+	return &UserResponse{
+		Id:        user.Id,
+		FirstName: user.FirstName,
+		LastName:  user.LastName,
+		Email:     user.Email,
+	}
 }

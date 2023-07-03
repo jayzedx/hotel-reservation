@@ -7,17 +7,17 @@ import (
 
 type User struct {
 	Id                primitive.ObjectID `bson:"_id,omitempty" query:"id"` //omitempty - don't show json when id is empty
-	FirstName         string             `bson:"firstName" query:"firstName"`
-	LastName          string             `bson:"lastName" query:"lastName"`
-	Email             string             `bson:"email" query:"-"`
-	EncryptedPassword string             `bson:"encryptedPassword" query:"-"`
+	FirstName         string             `bson:"firstname,omitempty" query:"firstname"`
+	LastName          string             `bson:"lastname,omitempty" query:"lastname"`
+	Email             string             `bson:"email,omitempty" query:"-"`
+	EncryptedPassword string             `bson:"encrypted_password,omitempty" query:"-"`
 }
 
 type UserRepository interface {
 	GetUserById(string) (*User, error)
 	GetUsers(filter bson.M) ([]*User, error)
 	CreateUser(*User) error
-	UpdateUser(filter bson.M, values bson.M) error
+	UpdateUser(filter bson.M, update bson.M) (int64, error)
 	DeleteUser(primitive.ObjectID) error
 	Drop() error
 }

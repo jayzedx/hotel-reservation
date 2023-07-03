@@ -45,24 +45,18 @@ func (r *hotelRepository) GetHotelById(id primitive.ObjectID) (*Hotel, error) {
 }
 
 func (r *hotelRepository) CreateHotel(hotel *Hotel) error {
-	resp, err := r.coll.InsertOne(r.ctx, hotel)
+	res, err := r.coll.InsertOne(r.ctx, hotel)
 	if err != nil {
 		return err
 	}
-	hotel.Id = resp.InsertedID.(primitive.ObjectID)
+	hotel.Id = res.InsertedID.(primitive.ObjectID)
 	return nil
 }
 
-func (r *hotelRepository) UpdateHotel(filter bson.M, params bson.M) error {
-	update := bson.D{
-		{
-			Key:   "$set",
-			Value: params,
-		},
-	}
-	_, err := r.coll.UpdateOne(r.ctx, filter, update)
+func (r *hotelRepository) UpdateHotel(filter bson.M, update interface{}) (int64, error) {
+	res, err := r.coll.UpdateOne(r.ctx, filter, update)
 	if err != nil {
-		return err
+		return 0, err
 	}
-	return nil
+	return res.ModifiedCount, nil
 }

@@ -43,7 +43,7 @@ func main() {
 
 		userService  = service.NewUserService(userRepository)
 		hotelService = service.NewHotelService(hotelRepository, roomRepository)
-		roomService  = service.NewRoomService(roomRepository)
+		roomService  = service.NewRoomService(roomRepository, hotelRepository)
 
 		userHandler  = handler.NewUserHandler(userService)
 		hotelHandler = handler.NewHotelHandler(hotelService)
@@ -61,7 +61,7 @@ func main() {
 	// user handlers
 	apiv1.Get("/users/**", userHandler.HandleGetUsersByParams)
 	apiv1.Get("/user/:id", userHandler.HandleGetUser)
-	apiv1.Post("/user", userHandler.HandlePostUser)
+	apiv1.Post("/user/**", userHandler.HandlePostUser)
 	apiv1.Delete("/user/:id", userHandler.HandleDeleteUser)
 	apiv1.Put("/user/:id", userHandler.HandlePutUser)
 
@@ -75,10 +75,12 @@ func main() {
 	// room handlers
 	apiv1.Post("/room", roomHandler.HandlePostRoom)
 	apiv1.Put("/room/:id", roomHandler.HandlePutRoom)
-	// apiv1.Delete("/room/:id", roomHandler.HandleDeleteRoom)
+	apiv1.Delete("/room/:id", roomHandler.HandleDeleteRoom)
 
 	logs.Info("App service start at port " + viper.GetString("app.port"))
-	app.Listen(PORT)
+	if err := app.Listen(PORT); err != nil {
+		logs.Error(err)
+	}
 
 }
 

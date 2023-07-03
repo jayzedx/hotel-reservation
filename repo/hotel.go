@@ -6,16 +6,15 @@ import (
 )
 
 type Hotel struct {
-	Id       primitive.ObjectID   `bson:"_id,omitempty"`
-	Name     string               `bson:"name"`
-	Location string               `bson:"location"`
-	Rating   int                  `bson:"rating" query:"rating"`
-	Rooms    []primitive.ObjectID `bson:"rooms"`
+	Id       primitive.ObjectID `bson:"_id,omitempty"`
+	Name     string             `bson:"name,omitempty"`
+	Location string             `bson:"location,omitempty"`
+	Rating   int                `bson:"rating,omitempty" query:"rating"`
 }
 
 type HotelRepository interface {
 	GetHotels(filter bson.M) ([]*Hotel, error)
 	GetHotelById(primitive.ObjectID) (*Hotel, error)
 	CreateHotel(*Hotel) error
-	UpdateHotel(filter bson.M, params bson.M) error
+	UpdateHotel(filter bson.M, update interface{}) (int64, error)
 }

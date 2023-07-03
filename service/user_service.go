@@ -1,7 +1,6 @@
 package service
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -13,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type userService struct {
@@ -29,16 +27,18 @@ func NewUserService(userRepository repo.UserRepository) *userService {
 func (s *userService) GetUserById(id string) (*UserResponse, error) {
 	user, err := s.userRepository.GetUserById(id)
 	if err != nil {
-
 		if err == mongo.ErrNoDocuments {
 			return nil, errs.AppError{
 				Code:    http.StatusBadRequest,
-				Message: "Data not found.",
+				Message: "User not found.",
+			}
+		} else {
+			logs.Error(err)
+			return nil, errs.AppError{
+				Code:    http.StatusBadRequest,
+				Message: "Unexpected error",
 			}
 		}
-
-		logs.Error(err)
-		return nil, err
 	}
 
 	data := &UserResponse{
@@ -54,17 +54,15 @@ func (s *userService) GetUsers() ([]*UserResponse, error) {
 	users, err := s.userRepository.GetUsers(bson.M{})
 	if err != nil {
 		logs.Error(err)
-		return nil, err
+		return nil, errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Unexpected error",
+		}
 	}
 
 	data := []*UserResponse{}
 	for _, user := range users {
-		data = append(data, &UserResponse{
-			Id:        user.Id,
-			FirstName: user.FirstName,
-			LastName:  user.LastName,
-			Email:     user.Email,
-		})
+		data = append(data, MapUserResponse(user))
 	}
 	return data, nil
 }
@@ -73,29 +71,28 @@ func (s *userService) CreateUser(params CreateUserParams) (*UserResponse, error)
 	if errors := params.Validate(); len(errors) > 0 {
 		return nil, errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Validation errors. Please check your input and try again.",
+			Message: "Validation errors",
 			Errors:  errors,
 		}
 	}
 
-	user, err := CreateUserFromParams(params)
+	user, err := CreateUserFromParams(&params)
 	if err != nil {
 		logs.Error(err)
-		return nil, err
+		return nil, errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Unexpected error",
+		}
 	}
 
 	if err = s.userRepository.CreateUser(user); err != nil {
 		logs.Error(err)
-		return nil, err
+		return nil, errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Can't create user",
+		}
 	}
-
-	data := &UserResponse{
-		Id:        user.Id,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-	}
-	return data, nil
+	return MapUserResponse(user), nil
 }
 
 func (s *userService) UpdateUser(userId string, params UpdateUserParams) error {
@@ -103,30 +100,40 @@ func (s *userService) UpdateUser(userId string, params UpdateUserParams) error {
 	if err != nil {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid id provided. Please check your input and try again.",
+			Message: "Invalid data provided",
 		}
 	}
-
+	// validation
 	if errors := params.Validate(); len(errors) > 0 {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Validation errors. Please check your input and try again.",
+			Message: "Validation errors",
 			Errors:  errors,
 		}
 	}
 
-	filter := bson.M{"_id": oid}
-	values := util.ToBSON(params)
+	user := UpdateUserFromParams(&params)
+	updateUser, err := util.ConvertToBsonM(user)
+	if err != nil {
+		return err
+	}
 
-	if length := len(values); length <= 0 {
+	if len(updateUser) == 0 {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
 			Message: "No field to update.",
 		}
 	}
-	if err := s.userRepository.UpdateUser(filter, values); err != nil {
+
+	filter := bson.M{"_id": oid}
+	update := bson.M{"$set": updateUser}
+
+	if _, err := s.userRepository.UpdateUser(filter, update); err != nil {
 		logs.Error(err)
-		return err
+		return errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Can't update this user",
+		}
 	}
 	return nil
 }
@@ -136,19 +143,16 @@ func (s *userService) DeleteUser(userId string) error {
 	if err != nil {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Invalid id provided. Please check your input and try again.",
+			Message: "Invalid data provided",
 		}
 	}
 
 	if err := s.userRepository.DeleteUser(oid); err != nil {
-		if errors.Is(err, mongo.ErrNoDocuments) {
-			return errs.AppError{
-				Code:    http.StatusBadRequest,
-				Message: "No user to delete.",
-			}
-		}
 		logs.Error(err)
-		return err
+		return errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Can't delete user",
+		}
 	}
 	return nil
 }
@@ -161,10 +165,16 @@ func (s *userService) GetUsersByParams(params repo.User) ([]*UserResponse, error
 	users, err := s.userRepository.GetUsers(filter)
 	if err != nil {
 		if err != mongo.ErrNoDocuments {
-			logs.Error(err)
-			return nil, err
+			return nil, errs.AppError{
+				Code:    http.StatusBadRequest,
+				Message: "users not found",
+			}
 		} else {
-			return nil, nil
+			logs.Error(err)
+			return nil, errs.AppError{
+				Code:    http.StatusBadRequest,
+				Message: "Upexpected Error",
+			}
 		}
 	}
 
@@ -183,7 +193,10 @@ func (s *userService) GetUsersByParams(params repo.User) ([]*UserResponse, error
 func (s *userService) Drop() error {
 	if err := s.userRepository.Drop(); err != nil {
 		logs.Error(err)
-		return err
+		return errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Upexpected Error",
+		}
 	}
 	return nil
 }
@@ -222,17 +235,4 @@ func createSearchFilter(params repo.User) bson.M {
 		}
 	}
 	return filter
-}
-
-func CreateUserFromParams(params CreateUserParams) (*repo.User, error) {
-	encp, err := bcrypt.GenerateFromPassword([]byte(params.Password), bcryptCost)
-	if err != nil {
-		return nil, err
-	}
-	return &repo.User{
-		FirstName:         params.FirstName,
-		LastName:          params.LastName,
-		Email:             params.Email,
-		EncryptedPassword: string(encp),
-	}, nil
 }
