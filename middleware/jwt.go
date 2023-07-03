@@ -33,7 +33,7 @@ func JWTAuthentication(c *fiber.Ctx) error {
 	}
 
 	// check token expired
-	fmt.Println("claims : ", claims)
+	// fmt.Println("claims : ", claims)
 	expiresFloat := claims["expires"].(float64)
 	expires := int64(expiresFloat)
 	if time.Now().Unix() > expires {

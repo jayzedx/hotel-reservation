@@ -24,6 +24,14 @@ func NewUserRepository(client *mongo.Client, dbname string) *userRepository {
 	}
 }
 
+func (r *userRepository) GetUserByEmail(email string) (*User, error) {
+	var user User
+	if err := r.coll.FindOne(r.ctx, bson.M{"email": email}).Decode(&user); err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (r *userRepository) GetUserById(id string) (*User, error) {
 	oid, err := primitive.ObjectIDFromHex(id)
 	if err != nil {

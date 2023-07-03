@@ -40,22 +40,25 @@ func main() {
 		userRepository  = repo.NewUserRepository(client, DB_NAME)
 		roomRepository  = repo.NewRoomRepository(client, DB_NAME)
 		hotelRepository = repo.NewHotelRepository(client, DB_NAME)
+		authRepository  = repo.NewAuthRepository(client, DB_NAME)
 
 		userService  = service.NewUserService(userRepository)
 		hotelService = service.NewHotelService(hotelRepository, roomRepository)
 		roomService  = service.NewRoomService(roomRepository, hotelRepository)
+		authService  = service.NewAuthService(userRepository, authRepository)
 
 		userHandler  = handler.NewUserHandler(userService)
 		hotelHandler = handler.NewHotelHandler(hotelService)
 		roomHandler  = handler.NewRoomHandler(roomService)
+		authHandler  = handler.NewAuthHandler(authService)
 
-		app = fiber.New(config)
-		// auth  = app.Group("/api")
+		app   = fiber.New(config)
+		auth  = app.Group("/api")
 		apiv1 = app.Group("/api/v1", middleware.JWTAuthentication)
 	)
 
-	// auth
-	// auth.Post("/auth", authHandler.HandleAuthenticate)
+	// auth handlers
+	auth.Post("/auth", authHandler.HandlePostAuthen)
 
 	// user handlers
 	apiv1.Get("/users/**", userHandler.HandleGetUsersByParams)

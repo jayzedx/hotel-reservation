@@ -84,7 +84,7 @@ func (h *hotelHandler) HandlePostHotel(ctx *fiber.Ctx) error {
 		}
 	}
 	return ctx.Status(http.StatusOK).JSON(resp.Response{
-		Code:    http.StatusOK,
+		Code:    http.StatusCreated,
 		Status:  "success",
 		Message: "Operation completed successfully",
 		Data:    hotel,

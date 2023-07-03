@@ -16,6 +16,7 @@ type User struct {
 type UserRepository interface {
 	GetUserById(string) (*User, error)
 	GetUsers(filter bson.M) ([]*User, error)
+	GetUserByEmail(email string) (*User, error)
 	CreateUser(*User) error
 	UpdateUser(filter bson.M, update bson.M) (int64, error)
 	DeleteUser(primitive.ObjectID) error
