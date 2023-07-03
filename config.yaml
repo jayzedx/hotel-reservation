@@ -1,5 +1,6 @@
 app:
   port: 5000
+  jwt_secret: helloworld
 
 db:
   database: hotel-reservation

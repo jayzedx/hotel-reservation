@@ -3,7 +3,6 @@ package api
 import (
 	"errors"
 	"fmt"
-	"os"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -11,6 +10,7 @@ import (
 	"github.com/jayzedx/hotel-reservation/api/response"
 	"github.com/jayzedx/hotel-reservation/db"
 	"github.com/jayzedx/hotel-reservation/types"
+	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -79,7 +79,7 @@ func createTokenFromUser(user *types.User) string {
 	}
 	//claims["id"] = user.Id
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	secret := os.Getenv("JWT_SECRET")
+	secret := viper.GetString("app.jwt_secret")
 	tokenStr, err := token.SignedString([]byte(secret))
 	if err != nil {
 		fmt.Println("failed to sign token with secret")

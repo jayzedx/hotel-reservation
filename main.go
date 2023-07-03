@@ -10,8 +10,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jayzedx/hotel-reservation/handler"
 	"github.com/jayzedx/hotel-reservation/logs"
+	"github.com/jayzedx/hotel-reservation/middleware"
 	"github.com/jayzedx/hotel-reservation/repo"
-	"github.com/jayzedx/hotel-reservation/resp"
 	"github.com/jayzedx/hotel-reservation/service"
 	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -19,7 +19,7 @@ import (
 )
 
 var config = fiber.Config{
-	ErrorHandler: resp.ErrorHandler,
+	ErrorHandler: handler.ErrorHandler,
 }
 
 var (
@@ -51,8 +51,7 @@ func main() {
 
 		app = fiber.New(config)
 		// auth  = app.Group("/api")
-		// apiv1 = app.Group("/api/v1", middleware.JWTAuthentication)
-		apiv1 = app.Group("/api/v1")
+		apiv1 = app.Group("/api/v1", middleware.JWTAuthentication)
 	)
 
 	// auth
