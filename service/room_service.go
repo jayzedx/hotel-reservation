@@ -45,16 +45,7 @@ func (s *roomService) CreateRoom(params CreateRoomParams) (*RoomResponse, error)
 		return nil, err
 	}
 
-	data := &RoomResponse{
-		Id:       room.Id,
-		Type:     room.Type,
-		Seaside:  room.Seaside,
-		Size:     room.Size,
-		Price:    room.Price,
-		HotelId:  room.HotelId,
-		Selected: room.Selected,
-	}
-	return data, nil
+	return MapRoomResponse(room), nil
 }
 
 func (s *roomService) UpdateRoom(id string, params UpdateRoomParams) error {

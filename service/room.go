@@ -12,13 +12,13 @@ type RoomService interface {
 }
 
 type RoomResponse struct {
-	Id       primitive.ObjectID `json:"room_id"`
-	Type     repo.RoomType      `json:"type"`
-	Seaside  bool               `json:"seaside"`
-	Size     string             `json:"size"`
-	Price    float64            `json:"price"`
-	HotelId  primitive.ObjectID `json:"hotel_id"`
-	Selected bool               `json:"selected"`
+	Id       string        `json:"room_id" mapstructure:"room_id"`
+	Type     repo.RoomType `json:"type"`
+	Seaside  bool          `json:"seaside"`
+	Size     string        `json:"size"`
+	Price    float64       `json:"price"`
+	HotelId  string        `json:"hotel_id" mapstructure:"hotel_id"`
+	Selected bool          `json:"selected"`
 }
 
 type CreateRoomParams struct {
@@ -71,12 +71,12 @@ func UpdateRoomFromParams(params *UpdateRoomParams) *repo.Room {
 
 func MapRoomResponse(room *repo.Room) *RoomResponse {
 	return &RoomResponse{
-		Id:       room.Id,
+		Id:       room.Id.Hex(),
 		Type:     room.Type,
 		Seaside:  room.Seaside,
 		Size:     room.Size,
 		Price:    room.Price,
-		HotelId:  room.HotelId,
+		HotelId:  room.HotelId.Hex(),
 		Selected: room.Selected,
 	}
 }

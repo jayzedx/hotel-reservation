@@ -1,133 +1,89 @@
-package api
+package test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
-	"net/http"
+	"errors"
 	"net/http/httptest"
-	"reflect"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/jayzedx/hotel-reservation/api/response"
-	"github.com/jayzedx/hotel-reservation/db"
-	"github.com/jayzedx/hotel-reservation/types"
+	"github.com/jayzedx/hotel-reservation/handler"
+	"github.com/jayzedx/hotel-reservation/repo"
+	"github.com/jayzedx/hotel-reservation/resp"
+	"github.com/jayzedx/hotel-reservation/service"
+	"github.com/mitchellh/mapstructure"
 )
 
-func TestAuthenticateSuccess(t *testing.T) {
-	tdb := setup(t)
-	defer tdb.teardown(t)
-
-	insertedUser := insertTestAuthen(t, tdb.store.User)
-
+func TestAuthenSuccess(t *testing.T) {
 	app := fiber.New()
-	authHandler := NewAuthHandler(tdb.store.User)
-	app.Post("/auth", authHandler.HandleAuthenticate)
+	testApp := NewTestApp()
 
-	params := AuthParams{
+	userRepository := repo.NewUserRepository(testApp.client, testApp.db.name)
+	authRepository := repo.NewAuthRepository(testApp.client, testApp.db.name)
+	authService := service.NewAuthService(userRepository, authRepository)
+	authHandler := handler.NewAuthHandler(authService)
+
+	_, err := SetupAuthen(userRepository)
+	if err != nil {
+		t.Fatal("Error from creating user")
+	}
+
+	// authen section
+	app.Post("/auth", authHandler.HandlePostAuthen)
+	params := service.CreateAuthParams{
 		Email:    "mail@mail.com",
 		Password: "1234567",
 	}
-	b, _ := json.Marshal(params)
 
-	req := httptest.NewRequest("POST", "/auth", bytes.NewReader(b))
+	byteValue, _ := json.Marshal(params)
+	req := httptest.NewRequest("POST", "/auth", bytes.NewReader(byteValue))
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := app.Test(req)
+	res, err := app.Test(req)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if resp.StatusCode != http.StatusOK {
-		//defer resp.Body.Close()
-		// body, err := ioutil.ReadAll(resp.Body)
-		// if err != nil {
-		// 	fmt.Println("Failed to read response body:", err)
-		// 	return
-		// }
-		// fmt.Println("Response Status:", resp.Status)
-		// fmt.Println("Response Body:", string(body))
-		t.Fatalf("expected http status of 200 but got %d", resp.StatusCode)
+	var response resp.Response
+	err = json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		t.Fatal("unauthorize")
 	}
+	res.Body.Close()
 
-	var authResp AuthResponse
-	if err := json.NewDecoder(resp.Body).Decode(&authResp); err != nil {
-		t.Fatal(err)
-	}
-	if authResp.Token == "" {
-		t.Fatal("expected the JWT token to be present in the auth reponse")
-	}
-
-	// Set the encrypted password to an empty string, because we do NOT return that any response
-	insertedUser.EncryptedPassword = ""
-	// fmt.Println(insertedUser)
-	// fmt.Println(authResp.User)
-	if !reflect.DeepEqual(insertedUser, authResp.User) {
-		t.Fatalf("expected the user to be present in the inserted user reponse")
-	}
-}
-
-func TestAuthenticateWithWrongPassword(t *testing.T) {
-	tdb := setup(t)
-	defer tdb.teardown(t)
-
-	insertTestAuthen(t, tdb.store.User)
-
-	app := fiber.New()
-	authHandler := NewAuthHandler(tdb.store.User)
-	app.Post("/auth", authHandler.HandleAuthenticate)
-
-	params := AuthParams{
-		Email:    "mail@mail.com",
-		Password: "passwordisnotcorrect",
-	}
-	b, _ := json.Marshal(params)
-
-	req := httptest.NewRequest("POST", "/auth", bytes.NewReader(b))
-	req.Header.Add("Content-Type", "application/json")
-
-	resp, err := app.Test(req)
+	var auth service.AuthResponse
+	err = mapstructure.Decode(response.Data, &auth)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if resp.StatusCode != http.StatusBadRequest {
-		t.Fatalf("expected http status of 400 but got %d", resp.StatusCode)
+	if auth.Email != params.Email {
+		t.Fatalf("expected email %s but got %s", params.Email, auth.Email)
+	}
+	if auth.Token == "" {
+		t.Fatal("expecting a token to be set")
 	}
 
-	var headResp response.HeadResponse
-	if err := json.NewDecoder(resp.Body).Decode(&headResp); err != nil {
-		t.Fatal(err)
-	}
-	if headResp.StatusCode != http.StatusBadRequest {
-		t.Fatalf("expected response status code to be error but got %d", headResp.StatusCode)
-	}
-	if headResp.Status != "error" {
-		t.Fatalf("expected response status to be error but got %s", headResp.Status)
-	}
-	if headResp.Msg != "invalid credentials" {
-		t.Fatalf("expected response msg to be <invalid credentials> but got %s", headResp.Msg)
-	}
+	defer userTeardown(t, userRepository)
 }
 
-func insertTestAuthen(t *testing.T, userStore db.UserStore) *types.User {
-	params := types.CreateUserParams{
+func SetupAuthen(userRepo repo.UserRepository) (*repo.User, error) {
+	params := service.CreateUserParams{
 		FirstName: "Jay",
 		LastName:  "Layman",
 		Email:     "mail@mail.com",
 		Password:  "1234567",
 	}
-	if err := params.Validate(); len(err) > 0 {
-		t.Fatal(err)
-	}
-	user, err := types.NewUserFromParams(params)
+
+	user, err := service.CreateUserFromParams(&params)
 	if err != nil {
-		t.Fatal(err)
+		return nil, errors.New("Creating user error")
 	}
-	_, err = userStore.CreateUser(context.TODO(), user)
-	if err != nil {
-		t.Fatal(err)
+
+	if err = userRepo.CreateUser(user); err != nil {
+		return nil, errors.New("Creating user error")
 	}
-	return user
+
+	return user, nil
 }

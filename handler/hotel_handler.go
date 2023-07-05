@@ -5,7 +5,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jayzedx/hotel-reservation/errs"
-	"github.com/jayzedx/hotel-reservation/repo"
 	"github.com/jayzedx/hotel-reservation/resp"
 	"github.com/jayzedx/hotel-reservation/service"
 )
@@ -22,7 +21,7 @@ func NewHotelHandler(hotelService service.HotelService) *hotelHandler {
 
 func (h *hotelHandler) HandleGetHotels(ctx *fiber.Ctx) error {
 
-	var params repo.Hotel
+	var params service.QueryHotelParams
 	if err := ctx.QueryParser(&params); err != nil {
 		return errs.AppError{
 			Code:    http.StatusBadRequest,

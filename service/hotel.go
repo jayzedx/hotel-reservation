@@ -2,23 +2,22 @@ package service
 
 import (
 	"github.com/jayzedx/hotel-reservation/repo"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type HotelService interface {
 	GetHotelRooms(id string) (*HotelResponse, error)
-	GetHotels(params repo.Hotel) ([]*HotelResponse, error)
+	GetHotels(params QueryHotelParams) ([]*HotelResponse, error)
 	CreateHotel(params CreateHotelParams) (*HotelResponse, error)
 	UpdateHotel(id string, params UpdateHotelParams) error
 }
 
 // GetHotels, GetHotelRooms
 type HotelResponse struct {
-	Id         primitive.ObjectID `json:"hotel_id,omitempty"`
-	Name       string             `json:"name"`
-	Location   string             `json:"location"`
-	Rating     int                `json:"rating"`
-	HotelRooms []*RoomResponse    `json:"hotel_rooms"`
+	Id         string          `json:"hotel_id,omitempty" mapstructure:"hotel_id"`
+	Name       string          `json:"name"`
+	Location   string          `json:"location"`
+	Rating     int             `json:"rating"`
+	HotelRooms []*RoomResponse `json:"hotel_rooms" mapstructure:"hotel_rooms"`
 }
 
 type CreateHotelParams struct {
@@ -31,6 +30,10 @@ type UpdateHotelParams struct {
 	Name     string `json:"name"`
 	Location string `json:"location"`
 	Rating   int    `json:"rating"`
+}
+
+type QueryHotelParams struct {
+	Rating int `query:"rating"`
 }
 
 func (params CreateHotelParams) Validate() map[string]string {
@@ -61,7 +64,7 @@ func UpdateHotelFromParams(params *UpdateHotelParams) *repo.Hotel {
 
 func MapHotelResponse(hotel *repo.Hotel, roomsResponse []*RoomResponse) *HotelResponse {
 	return &HotelResponse{
-		Id:         hotel.Id,
+		Id:         hotel.Id.Hex(),
 		Name:       hotel.Name,
 		Location:   hotel.Location,
 		Rating:     hotel.Rating,

@@ -41,13 +41,7 @@ func (s *userService) GetUserById(id string) (*UserResponse, error) {
 		}
 	}
 
-	data := &UserResponse{
-		Id:        user.Id,
-		FirstName: user.FirstName,
-		LastName:  user.LastName,
-		Email:     user.Email,
-	}
-	return data, nil
+	return MapUserResponse(user), nil
 }
 
 func (s *userService) GetUsers() ([]*UserResponse, error) {
@@ -180,12 +174,7 @@ func (s *userService) GetUsersByParams(params repo.User) ([]*UserResponse, error
 
 	data := []*UserResponse{}
 	for _, user := range users {
-		data = append(data, &UserResponse{
-			Id:        user.Id,
-			FirstName: user.FirstName,
-			LastName:  user.LastName,
-			Email:     user.Email,
-		})
+		data = append(data, MapUserResponse(user))
 	}
 	return data, nil
 }

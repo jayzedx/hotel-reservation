@@ -29,9 +29,11 @@ func (h *authHandler) HandlePostAuthen(ctx *fiber.Ctx) error {
 	}
 	data, err := h.authService.Authenticate(params)
 	if err != nil {
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
+		appErr, ok := err.(errs.AppError)
+		if ok {
+			return appErr
+		} else {
+			return err
 		}
 	}
 

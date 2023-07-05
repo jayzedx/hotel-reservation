@@ -41,3 +41,5 @@ go get github.com/spf13/viper
 ### log ###
 go get -u go.uber.org/zap
 
+### map unknown struct libs ###
+ go get github.com/mitchellh/mapstructure

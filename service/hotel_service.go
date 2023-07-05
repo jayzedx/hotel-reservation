@@ -23,7 +23,7 @@ func NewHotelService(hotelRepository repo.HotelRepository, roomRepository repo.R
 	}
 }
 
-func (s *hotelService) GetHotels(params repo.Hotel) ([]*HotelResponse, error) {
+func (s *hotelService) GetHotels(params QueryHotelParams) ([]*HotelResponse, error) {
 	var (
 		rating = params.Rating
 		filter = bson.M{}

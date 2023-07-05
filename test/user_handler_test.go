@@ -1,78 +1,65 @@
-package api
+package test
 
 import (
 	"bytes"
-	"context"
 	"encoding/json"
-	"log"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/jayzedx/hotel-reservation/db"
-	"github.com/jayzedx/hotel-reservation/types"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+	"github.com/jayzedx/hotel-reservation/handler"
+	"github.com/jayzedx/hotel-reservation/repo"
+	"github.com/jayzedx/hotel-reservation/resp"
+	"github.com/jayzedx/hotel-reservation/service"
+	"github.com/mitchellh/mapstructure"
 )
 
-type testdb struct {
-	store db.Store
-}
-
-func (tdb *testdb) teardown(t *testing.T) {
-	if err := tdb.store.User.Drop(context.TODO()); err != nil {
-		t.Fatal(err)
-	}
-}
-
-func setup(t *testing.T) *testdb {
-	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(db.DBURI))
-	if err != nil {
-		log.Fatal(err)
-	}
-	return &testdb{
-		store: db.Store{
-			User: db.NewMongoUserStore(client, db.TEST_DBNAME),
-		},
-	}
-}
-
-func TestPostUser(t *testing.T) {
-	tdb := setup(t)
-	defer tdb.teardown(t)
-	// t.Fail()
+func TestHandlePostUser(t *testing.T) {
 
 	app := fiber.New()
-	userHandler := NewUserHandler(&tdb.store)
-	app.Post("/user", userHandler.HandlePostUser)
+	testApp := NewTestApp()
 
-	params := types.CreateUserParams{
+	userRepo := repo.NewUserRepository(testApp.client, testApp.db.name)
+	userService := service.NewUserService(userRepo)
+	userHandler := handler.NewUserHandler(userService)
+
+	defer userTeardown(t, userRepo)
+
+	app.Post("/user", userHandler.HandlePostUser)
+	params := service.CreateUserParams{
 		Email:     "foo@mail.com",
 		FirstName: "Mars",
 		LastName:  "Fullmaker",
 		Password:  "12345678",
 	}
-	b, _ := json.Marshal(params)
 
-	req := httptest.NewRequest("POST", "/user", bytes.NewReader(b))
+	byteValue, _ := json.Marshal(params)
+	req := httptest.NewRequest("POST", "/user", bytes.NewReader(byteValue))
 	req.Header.Add("Content-Type", "application/json")
 
-	resp, err := app.Test(req)
-
+	res, err := app.Test(req)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	// bb, _ := io.ReadAll(resp.Body)
-	// fmt.Println(string(bb))
-	var user types.User
-	if len(user.Id) == 0 {
-		t.Fatal("expecting a user id to be set")
+	var response resp.Response
+	err = json.NewDecoder(res.Body).Decode(&response)
+	if err != nil {
+		t.Fatal(err)
+	}
+	res.Body.Close()
+
+	var user service.UserResponse
+	err = mapstructure.Decode(response.Data, &user)
+	if err != nil {
+		t.Fatal(err)
 	}
 
-	json.NewDecoder(resp.Body).Decode(&user)
+	if user.Id == "" {
+		t.Fatal("expecting a user id to be set")
+	}
 	if user.FirstName != params.FirstName {
-		t.Fatalf("expected username %s but got %s", params.FirstName, user.FirstName)
+		t.Fatalf("expected first name %s but got %s", params.FirstName, user.FirstName)
 	}
 	if user.LastName != params.LastName {
 		t.Fatalf("expected last name %s but got %s", params.LastName, user.LastName)
@@ -80,9 +67,11 @@ func TestPostUser(t *testing.T) {
 	if user.Email != params.Email {
 		t.Fatalf("expected email %s but got %s", params.Email, user.Email)
 	}
-	if len(user.EncryptedPassword) > 0 {
-		t.Fatalf("expecting the EncryptedPassword not be included in the json response")
-	}
-	// fmt.Print(user)
 
+}
+
+func userTeardown(t *testing.T, userRepo repo.UserRepository) {
+	if err := userRepo.Drop(); err != nil {
+		t.Fatal(err)
+	}
 }

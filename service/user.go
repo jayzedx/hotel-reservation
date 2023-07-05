@@ -5,7 +5,6 @@ import (
 	"regexp"
 
 	"github.com/jayzedx/hotel-reservation/repo"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -20,10 +19,10 @@ type UserService interface {
 }
 
 type UserResponse struct {
-	Id        primitive.ObjectID `json:"id,omitempty"`
-	FirstName string             `json:"firstname"`
-	LastName  string             `json:"lastname"`
-	Email     string             `json:"email"`
+	Id        string `json:"id,omitempty"` //use id as string for converting back to struct
+	FirstName string `json:"firstname"`
+	LastName  string `json:"lastname"`
+	Email     string `json:"email"`
 }
 
 type CreateUserParams struct {
@@ -105,7 +104,7 @@ func UpdateUserFromParams(params *UpdateUserParams) *repo.User {
 
 func MapUserResponse(user *repo.User) *UserResponse {
 	return &UserResponse{
-		Id:        user.Id,
+		Id:        user.Id.Hex(),
 		FirstName: user.FirstName,
 		LastName:  user.LastName,
 		Email:     user.Email,

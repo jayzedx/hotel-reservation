@@ -9,7 +9,7 @@ type Hotel struct {
 	Id       primitive.ObjectID `bson:"_id,omitempty"`
 	Name     string             `bson:"name,omitempty"`
 	Location string             `bson:"location,omitempty"`
-	Rating   int                `bson:"rating,omitempty" query:"rating"`
+	Rating   int                `bson:"rating,omitempty"`
 }
 
 type HotelRepository interface {
