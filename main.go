@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jayzedx/hotel-reservation/handler"
 	"github.com/jayzedx/hotel-reservation/logs"
+	"github.com/jayzedx/hotel-reservation/middleware"
 	"github.com/jayzedx/hotel-reservation/repo"
 	"github.com/jayzedx/hotel-reservation/service"
 	"github.com/spf13/viper"
@@ -36,48 +37,55 @@ func main() {
 	// flag.Parse()
 
 	var (
-		userRepository  = repo.NewUserRepository(client, DB_NAME)
-		roomRepository  = repo.NewRoomRepository(client, DB_NAME)
-		hotelRepository = repo.NewHotelRepository(client, DB_NAME)
-		authRepository  = repo.NewAuthRepository(client, DB_NAME)
+		userRepository    = repo.NewUserRepository(client, DB_NAME)
+		roomRepository    = repo.NewRoomRepository(client, DB_NAME)
+		hotelRepository   = repo.NewHotelRepository(client, DB_NAME)
+		authRepository    = repo.NewAuthRepository(client, DB_NAME)
+		bookingRepository = repo.NewBookingRepository(client, DB_NAME)
 
-		userService  = service.NewUserService(userRepository)
-		hotelService = service.NewHotelService(hotelRepository, roomRepository)
-		roomService  = service.NewRoomService(roomRepository, hotelRepository)
-		authService  = service.NewAuthService(userRepository, authRepository)
+		userService    = service.NewUserService(userRepository)
+		hotelService   = service.NewHotelService(hotelRepository, roomRepository)
+		roomService    = service.NewRoomService(roomRepository, hotelRepository)
+		authService    = service.NewAuthService(userRepository, authRepository)
+		bookingService = service.NewBookingService(roomRepository, bookingRepository)
 
-		userHandler  = handler.NewUserHandler(userService)
-		hotelHandler = handler.NewHotelHandler(hotelService)
-		roomHandler  = handler.NewRoomHandler(roomService)
-		authHandler  = handler.NewAuthHandler(authService)
+		userHandler    = handler.NewUserHandler(userService)
+		hotelHandler   = handler.NewHotelHandler(hotelService)
+		roomHandler    = handler.NewRoomHandler(roomService)
+		authHandler    = handler.NewAuthHandler(authService)
+		bookingHandler = handler.NewBookingHandler(bookingService)
 
-		app   = fiber.New(config)
-		auth  = app.Group("/api")
-		apiv1 = app.Group("/api/v1")
-		// apiv1 = app.Group("/api/v1", middleware.JWTAuthentication)
+		app  = fiber.New(config)
+		auth = app.Group("/api")
+		// apiv1 = app.Group("/api/v1")
+		apiv1 = app.Group("/api/v1", middleware.JWTAuthentication(userRepository))
 	)
 
 	// auth handlers
 	auth.Post("/auth", authHandler.HandlePostAuthen)
 
 	// user handlers
-	apiv1.Get("/users/**", userHandler.HandleGetUsersByParams)
+	apiv1.Get("/users/", userHandler.HandleGetUsersByParams)
 	apiv1.Get("/user/:id", userHandler.HandleGetUser)
 	apiv1.Post("/user/**", userHandler.HandlePostUser)
 	apiv1.Delete("/user/:id", userHandler.HandleDeleteUser)
 	apiv1.Put("/user/:id", userHandler.HandlePutUser)
 
 	// hotel handlers
-	apiv1.Get("/hotels/**", hotelHandler.HandleGetHotels)
+	apiv1.Get("/hotels/", hotelHandler.HandleGetHotels)
 	apiv1.Get("/hotel/:id/*", hotelHandler.HandleGetHotel)
 	apiv1.Post("/hotel", hotelHandler.HandlePostHotel)
 	apiv1.Put("/hotel/:id", hotelHandler.HandlePutHotel)
 	// apiv1.Delete("/hotel/:id", roomHandler.HandleDeleteHotel)
 
 	// room handlers
+	apiv1.Get("/rooms/", roomHandler.HandleGetRooms)
 	apiv1.Post("/room", roomHandler.HandlePostRoom)
 	apiv1.Put("/room/:id", roomHandler.HandlePutRoom)
 	apiv1.Delete("/room/:id", roomHandler.HandleDeleteRoom)
+
+	// booking handlers
+	apiv1.Post("/room/:id/booking", bookingHandler.HandlePostBooking)
 
 	logs.Info("App service start at port " + viper.GetString("app.port"))
 	if err := app.Listen(PORT); err != nil {

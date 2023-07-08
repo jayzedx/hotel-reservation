@@ -36,12 +36,12 @@ type QueryHotelParams struct {
 	Rating int `query:"rating"`
 }
 
-func (params CreateHotelParams) Validate() map[string]string {
+func (params *CreateHotelParams) Validate() map[string]string {
 	errors := map[string]string{}
 	return errors
 }
 
-func (params UpdateHotelParams) Validate() map[string]string {
+func (params *UpdateHotelParams) Validate() map[string]string {
 	errors := map[string]string{}
 	return errors
 }

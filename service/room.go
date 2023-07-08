@@ -6,6 +6,7 @@ import (
 )
 
 type RoomService interface {
+	GetRooms() ([]*RoomResponse, error)
 	CreateRoom(params CreateRoomParams) (*RoomResponse, error)
 	UpdateRoom(id string, params UpdateRoomParams) error
 	DeleteRoom(id string) error
@@ -38,12 +39,12 @@ type UpdateRoomParams struct {
 	Selected bool          `json:"selected"`
 }
 
-func (params CreateRoomParams) Validate() map[string]string {
+func (params *CreateRoomParams) Validate() map[string]string {
 	errors := map[string]string{}
 	return errors
 }
 
-func (params UpdateRoomParams) Validate() map[string]string {
+func (params *UpdateRoomParams) Validate() map[string]string {
 	errors := map[string]string{}
 	return errors
 }

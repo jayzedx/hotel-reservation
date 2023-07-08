@@ -14,7 +14,7 @@ type User struct {
 }
 
 type UserRepository interface {
-	GetUserById(string) (*User, error)
+	GetUserById(primitive.ObjectID) (*User, error)
 	GetUsers(filter bson.M) ([]*User, error)
 	GetUserByEmail(email string) (*User, error)
 	CreateUser(*User) error

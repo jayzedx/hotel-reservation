@@ -49,6 +49,14 @@ func (r *roomRepository) GetRooms(filter bson.M) ([]*Room, error) {
 	return rooms, nil
 }
 
+func (r *roomRepository) GetRoomById(id primitive.ObjectID) (*Room, error) {
+	var room Room
+	if err := r.coll.FindOne(r.ctx, bson.M{"_id": id}).Decode(&room); err != nil {
+		return nil, err
+	}
+	return &room, nil
+}
+
 func (r *roomRepository) CreateRoom(room *Room) error {
 	resp, err := r.coll.InsertOne(r.ctx, room)
 	if err != nil {

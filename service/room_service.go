@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/jayzedx/hotel-reservation/errs"
+	"github.com/jayzedx/hotel-reservation/logs"
 	"github.com/jayzedx/hotel-reservation/repo"
 	"github.com/jayzedx/hotel-reservation/util"
 	"go.mongodb.org/mongo-driver/bson"
@@ -20,6 +21,23 @@ func NewRoomService(roomRepository repo.RoomRepository, hotelRepository repo.Hot
 		roomRepository:  roomRepository,
 		hotelRepository: hotelRepository,
 	}
+}
+
+func (s *roomService) GetRooms() ([]*RoomResponse, error) {
+	rooms, err := s.roomRepository.GetRooms(bson.M{})
+	if err != nil {
+		logs.Error(err)
+		return nil, errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Unexpected error",
+		}
+	}
+
+	data := []*RoomResponse{}
+	for _, room := range rooms {
+		data = append(data, MapRoomResponse(room))
+	}
+	return data, nil
 }
 
 func (s *roomService) CreateRoom(params CreateRoomParams) (*RoomResponse, error) {

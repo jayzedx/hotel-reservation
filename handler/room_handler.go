@@ -19,6 +19,24 @@ func NewRoomHandler(roomService service.RoomService) *roomHandler {
 	}
 }
 
+func (h *roomHandler) HandleGetRooms(ctx *fiber.Ctx) error {
+	rooms, err := h.roomService.GetRooms()
+	if err != nil {
+		appErr, ok := err.(errs.AppError)
+		if ok {
+			return appErr
+		} else {
+			return err
+		}
+	}
+	return ctx.Status(http.StatusOK).JSON(resp.Response{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "Operation completed successfully",
+		Data:    rooms,
+	})
+}
+
 func (h *roomHandler) HandlePostRoom(ctx *fiber.Ctx) error {
 	var params service.CreateRoomParams
 	if err := ctx.BodyParser(&params); err != nil {

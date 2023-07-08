@@ -32,13 +32,9 @@ func (r *userRepository) GetUserByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
-func (r *userRepository) GetUserById(id string) (*User, error) {
-	oid, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, err
-	}
+func (r *userRepository) GetUserById(id primitive.ObjectID) (*User, error) {
 	var user User
-	if err := r.coll.FindOne(r.ctx, bson.M{"_id": oid}).Decode(&user); err != nil {
+	if err := r.coll.FindOne(r.ctx, bson.M{"_id": id}).Decode(&user); err != nil {
 		return nil, err
 	}
 	return &user, nil

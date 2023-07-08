@@ -25,7 +25,14 @@ func NewUserService(userRepository repo.UserRepository) *userService {
 }
 
 func (s *userService) GetUserById(id string) (*UserResponse, error) {
-	user, err := s.userRepository.GetUserById(id)
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid data provided",
+		}
+	}
+	user, err := s.userRepository.GetUserById(oid)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, errs.AppError{

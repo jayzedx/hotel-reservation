@@ -28,6 +28,7 @@ type Room struct {
 type RoomRepository interface {
 	GetRoomsByPipeline(pipeline []bson.M) ([]*Room, error)
 	GetRooms(filter bson.M) ([]*Room, error)
+	GetRoomById(id primitive.ObjectID) (*Room, error)
 	CreateRoom(*Room) error
 	UpdateRoom(filter bson.M, update interface{}) (int64, error)
 	GetRoomIds(hotelId primitive.ObjectID) ([]primitive.ObjectID, error)
