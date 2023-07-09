@@ -1,12 +1,16 @@
 package service
 
 import (
+	"net/http"
 	"time"
 
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/jayzedx/hotel-reservation/errs"
 	"github.com/jayzedx/hotel-reservation/logs"
 	"github.com/jayzedx/hotel-reservation/repo"
 	"github.com/spf13/viper"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 type AuthService interface {
@@ -58,4 +62,16 @@ func createTokenFromAuth(auth *repo.Auth) (string, error) {
 	}
 	// auth.Token = tokenStr
 	return tokenStr, nil
+}
+
+func isAuthorized(ctx *fiber.Ctx, userId primitive.ObjectID) (bool, error) {
+	user, ok := ctx.Context().UserValue("user").(*repo.User)
+	if !ok {
+		return false, errs.AppError{
+			Code:    http.StatusUnauthorized,
+			Message: "Unauthorized",
+		}
+	}
+
+	return (user.Id == userId), nil
 }

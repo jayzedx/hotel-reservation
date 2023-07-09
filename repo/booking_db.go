@@ -52,3 +52,11 @@ func (r *bookingRepository) GetBookingById(id primitive.ObjectID) (*Booking, err
 	}
 	return &booking, nil
 }
+
+func (r *bookingRepository) UpdateBooking(filter bson.M, update interface{}) (int64, error) {
+	res, err := r.coll.UpdateOne(r.ctx, filter, update)
+	if err != nil {
+		return 0, err
+	}
+	return res.ModifiedCount, nil
+}

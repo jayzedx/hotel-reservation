@@ -86,3 +86,23 @@ func (h *bookingHandler) HandleGetBooking(ctx *fiber.Ctx) error {
 		Data:    booking,
 	})
 }
+
+func (h *bookingHandler) HandleCancelBooking(ctx *fiber.Ctx) error {
+	var (
+		id = ctx.Params("id")
+	)
+	if err := h.bookingService.CancelBooking(ctx, id); err != nil {
+		appErr, ok := err.(errs.AppError)
+		if ok {
+			return appErr
+		} else {
+			return err
+		}
+	}
+	return ctx.Status(http.StatusOK).JSON(resp.Response{
+		Code:    http.StatusOK,
+		Status:  "success",
+		Message: "Operation completed successfully",
+		Data:    nil,
+	})
+}

@@ -146,14 +146,8 @@ func (s *bookingService) GetBooking(ctx *fiber.Ctx, id string) (*BookingResponse
 		}
 	}
 
-	user, ok := ctx.Context().UserValue("user").(*repo.User)
-	if !ok {
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Unexpected error",
-		}
-	}
-	if booking.UserId != user.Id {
+	ok, err := isAuthorized(ctx, booking.UserId)
+	if err != nil || !ok {
 		return nil, errs.AppError{
 			Code:    http.StatusUnauthorized,
 			Message: "Unauthorized",
@@ -161,4 +155,47 @@ func (s *bookingService) GetBooking(ctx *fiber.Ctx, id string) (*BookingResponse
 	}
 
 	return MapBookingResponse(booking), nil
+}
+
+func (s *bookingService) CancelBooking(ctx *fiber.Ctx, id string) error {
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid id provided",
+		}
+	}
+
+	booking, err := s.bookingRepository.GetBookingById(oid)
+	if err != nil {
+		return errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Your booking id isn't exist",
+		}
+	}
+
+	ok, err := isAuthorized(ctx, booking.UserId)
+	if err != nil || !ok {
+		return errs.AppError{
+			Code:    http.StatusUnauthorized,
+			Message: "Unauthorized",
+		}
+	}
+
+	filter := bson.M{"_id": oid}
+	update := bson.M{
+		"$set": bson.M{
+			"canceled":    true,
+			"cancel_date": time.Now(),
+		},
+	}
+	updated, err := s.bookingRepository.UpdateBooking(filter, update)
+	if err != nil || updated < 0 {
+		return errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Can't cancel this booking",
+		}
+	}
+
+	return nil
 }

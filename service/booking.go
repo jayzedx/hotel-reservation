@@ -5,6 +5,7 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jayzedx/hotel-reservation/repo"
+	"github.com/jayzedx/hotel-reservation/util"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
@@ -12,15 +13,18 @@ type BookingService interface {
 	CreateBooking(ctx *fiber.Ctx, roomId string, params CreateBookingParams) (*BookingResponse, error)
 	GetBookings(ctx *fiber.Ctx) ([]*BookingResponse, error)
 	GetBooking(ctx *fiber.Ctx, id string) (*BookingResponse, error)
+	CancelBooking(ctx *fiber.Ctx, id string) error
 }
 
 type BookingResponse struct {
-	Id           string    `json:"booking_id,omitempty" mapstructure:"booking_id"`
-	RoomId       string    `json:"room_id" mapstructure:"room_id"`
-	UserId       string    `json:"user_id" mapstructure:"user_id"`
-	PersonNumber int       `json:"person_number" mapstructure:"person_number"`
-	FromDate     time.Time `json:"from_date,omitempty" mapstructure:"from_date"`
-	TilDate      time.Time `json:"til_date,omitempty" mapstructure:"til_date"`
+	Id           string `json:"booking_id,omitempty" mapstructure:"booking_id"`
+	RoomId       string `json:"room_id" mapstructure:"room_id"`
+	UserId       string `json:"user_id" mapstructure:"user_id"`
+	PersonNumber int    `json:"person_number" mapstructure:"person_number"`
+	FromDate     string `json:"from_date,omitempty" mapstructure:"from_date"`
+	TilDate      string `json:"til_date,omitempty" mapstructure:"til_date"`
+	Canceled     bool   `json:"canceled"`
+	CancelDate   string `json:"cancel_date,omitempty" mapstructure:"cancel_date"`
 }
 
 // {
@@ -53,8 +57,10 @@ func MapBookingResponse(booking *repo.Booking) *BookingResponse {
 		RoomId:       booking.RoomId.Hex(),
 		UserId:       booking.UserId.Hex(),
 		PersonNumber: booking.PersonNumber,
-		FromDate:     booking.FromDate,
-		TilDate:      booking.TilDate,
+		FromDate:     util.ConvertTimeToString(booking.FromDate),
+		TilDate:      util.ConvertTimeToString(booking.TilDate),
+		Canceled:     booking.Canceled,
+		CancelDate:   util.ConvertTimeToString(booking.CancelDate),
 	}
 }
 

@@ -1,6 +1,8 @@
 package util
 
 import (
+	"time"
+
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -16,4 +18,11 @@ func ConvertToBsonM(data interface{}) (bson.M, error) {
 	}
 
 	return bsonM, nil
+}
+
+func ConvertTimeToString(dt time.Time) string {
+	if dt.IsZero() {
+		return string([]byte{})
+	}
+	return dt.Format(time.RFC3339)
 }
