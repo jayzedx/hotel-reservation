@@ -16,13 +16,14 @@ const (
 )
 
 type Room struct {
-	Id       primitive.ObjectID `bson:"_id,omitempty"` //omitempty - don't show json when id is empty
-	Type     RoomType           `bson:"type,omitempty"`
-	Seaside  bool               `bson:"seaside,omitempty"`
-	Size     string             `bson:"size,omitempty"`
-	Price    float64            `bson:"price,omitempty"`
-	Selected bool               `bson:"selected,omitempty"`
-	HotelId  primitive.ObjectID `bson:"hotel_id,omitempty"`
+	Id          primitive.ObjectID `bson:"_id,omitempty"` //omitempty - don't show json when id is empty
+	Type        RoomType           `bson:"type,omitempty"`
+	Seaside     bool               `bson:"seaside,omitempty"`
+	Size        string             `bson:"size,omitempty"`
+	Price       float64            `bson:"price,omitempty"`
+	Selected    bool               `bson:"selected,omitempty"`
+	HotelId     primitive.ObjectID `bson:"hotel_id,omitempty"`
+	IsAvailable bool               `bson:"is_available"`
 }
 
 type RoomRepository interface {
