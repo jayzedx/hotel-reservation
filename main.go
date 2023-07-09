@@ -86,6 +86,8 @@ func main() {
 
 	// booking handlers
 	apiv1.Post("/room/:id/booking", bookingHandler.HandlePostBooking)
+	apiv1.Get("/booking", bookingHandler.HandleGetBookings)
+	apiv1.Get("/booking/:id", bookingHandler.HandleGetBooking)
 
 	logs.Info("App service start at port " + viper.GetString("app.port"))
 	if err := app.Listen(PORT); err != nil {

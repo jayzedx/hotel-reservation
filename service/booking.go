@@ -10,6 +10,8 @@ import (
 
 type BookingService interface {
 	CreateBooking(ctx *fiber.Ctx, roomId string, params CreateBookingParams) (*BookingResponse, error)
+	GetBookings(ctx *fiber.Ctx) ([]*BookingResponse, error)
+	GetBooking(ctx *fiber.Ctx, id string) (*BookingResponse, error)
 }
 
 type BookingResponse struct {
@@ -65,5 +67,10 @@ func (params *CreateBookingParams) Validate() map[string]string {
 	if now.After(params.TilDate) {
 		errors["til_date"] = "til_date is invalid"
 	}
+
+	if params.FromDate.After(params.TilDate) {
+		errors["til_date"] = "from_date is invalid"
+	}
+
 	return errors
 }

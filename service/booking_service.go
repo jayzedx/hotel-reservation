@@ -111,3 +111,39 @@ func (s *bookingService) isBookingAvailable(ctx *fiber.Ctx, roomId primitive.Obj
 	}
 	return len(bookings) == 0, nil
 }
+
+func (s *bookingService) GetBookings(ctx *fiber.Ctx) ([]*BookingResponse, error) {
+	bookings, err := s.bookingRepository.GetBookings(bson.M{})
+	if err != nil {
+		logs.Error(err)
+		return nil, errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Unexpected error",
+		}
+	}
+
+	data := []*BookingResponse{}
+	for _, booking := range bookings {
+		data = append(data, MapBookingResponse(booking))
+	}
+	return data, nil
+}
+
+func (s *bookingService) GetBooking(ctx *fiber.Ctx, id string) (*BookingResponse, error) {
+	oid, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Invalid id provided",
+		}
+	}
+	booking, err := s.bookingRepository.GetBookingById(oid)
+	if err != nil {
+		return nil, errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Your hotel id isn't exist",
+		}
+	}
+
+	return MapBookingResponse(booking), nil
+}

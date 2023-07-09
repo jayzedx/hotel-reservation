@@ -44,3 +44,11 @@ func (r *bookingRepository) GetBookings(filter bson.M) ([]*Booking, error) {
 	}
 	return bookings, nil
 }
+
+func (r *bookingRepository) GetBookingById(id primitive.ObjectID) (*Booking, error) {
+	var booking Booking
+	if err := r.coll.FindOne(r.ctx, bson.M{"_id": id}).Decode(&booking); err != nil {
+		return nil, err
+	}
+	return &booking, nil
+}

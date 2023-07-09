@@ -19,4 +19,5 @@ type Booking struct {
 type BookingRepository interface {
 	CreateBooking(*Booking) error
 	GetBookings(filter bson.M) ([]*Booking, error)
+	GetBookingById(id primitive.ObjectID) (*Booking, error)
 }
