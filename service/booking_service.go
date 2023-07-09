@@ -137,11 +137,26 @@ func (s *bookingService) GetBooking(ctx *fiber.Ctx, id string) (*BookingResponse
 			Message: "Invalid id provided",
 		}
 	}
+
 	booking, err := s.bookingRepository.GetBookingById(oid)
 	if err != nil {
 		return nil, errs.AppError{
 			Code:    http.StatusBadRequest,
-			Message: "Your hotel id isn't exist",
+			Message: "Your booking id isn't exist",
+		}
+	}
+
+	user, ok := ctx.Context().UserValue("user").(*repo.User)
+	if !ok {
+		return nil, errs.AppError{
+			Code:    http.StatusBadRequest,
+			Message: "Unexpected error",
+		}
+	}
+	if booking.UserId != user.Id {
+		return nil, errs.AppError{
+			Code:    http.StatusUnauthorized,
+			Message: "Unauthorized",
 		}
 	}
 

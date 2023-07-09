@@ -7,9 +7,9 @@ import (
 
 type Hotel struct {
 	Id       primitive.ObjectID `bson:"_id,omitempty"`
-	Name     string             `bson:"name,omitempty"`
-	Location string             `bson:"location,omitempty"`
-	Rating   int                `bson:"rating,omitempty"`
+	Name     string             `bson:"name"`
+	Location string             `bson:"location"`
+	Rating   int                `bson:"rating"`
 }
 
 type HotelRepository interface {

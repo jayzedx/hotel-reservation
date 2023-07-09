@@ -9,11 +9,11 @@ import (
 
 type Booking struct {
 	Id           primitive.ObjectID `bson:"_id,omitempty"`
-	RoomId       primitive.ObjectID `bson:"room_id,omitempty"`
-	UserId       primitive.ObjectID `bson:"user_id,omitempty"`
-	PersonNumber int                `bson:"person_number,omitempty"`
-	FromDate     time.Time          `bson:"from_date,omitempty"`
-	TilDate      time.Time          `bson:"til_date,omitempty"`
+	RoomId       primitive.ObjectID `bson:"room_id"`
+	UserId       primitive.ObjectID `bson:"user_id"`
+	PersonNumber int                `bson:"person_number"`
+	FromDate     time.Time          `bson:"from_date"`
+	TilDate      time.Time          `bson:"til_date"`
 }
 
 type BookingRepository interface {
