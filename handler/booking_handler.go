@@ -25,10 +25,7 @@ func (h *bookingHandler) HandlePostBooking(ctx *fiber.Ctx) error {
 		params service.CreateBookingParams
 	)
 	if err := ctx.BodyParser(&params); err != nil {
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return errs.ErrBadRequest()
 	}
 
 	booking, err := h.bookingService.CreateBooking(ctx, roomId, params)

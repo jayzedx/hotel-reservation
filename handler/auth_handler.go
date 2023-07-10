@@ -22,10 +22,7 @@ func NewAuthHandler(authService service.AuthService) *authHandler {
 func (h *authHandler) HandlePostAuthen(ctx *fiber.Ctx) error {
 	var params service.CreateAuthParams
 	if err := ctx.BodyParser(&params); err != nil {
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return errs.ErrBadRequest()
 	}
 	data, err := h.authService.Authenticate(params)
 	if err != nil {

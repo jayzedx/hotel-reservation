@@ -63,10 +63,7 @@ func (s *bookingService) CreateBooking(ctx *fiber.Ctx, roomIdstr string, params 
 			}
 		} else {
 			logs.Error(err)
-			return nil, errs.AppError{
-				Code:    http.StatusBadRequest,
-				Message: "Unexpected error",
-			}
+			return nil, errs.ErrUnexpected()
 		}
 	}
 
@@ -74,10 +71,7 @@ func (s *bookingService) CreateBooking(ctx *fiber.Ctx, roomIdstr string, params 
 	ok, err = s.isBookingAvailable(ctx, roomId, params.FromDate, params.TilDate)
 	if err != nil {
 		logs.Error(err)
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Unexpected error",
-		}
+		return nil, errs.ErrUnexpected()
 	}
 	if !ok {
 		return nil, errs.AppError{
@@ -116,10 +110,7 @@ func (s *bookingService) GetBookings(ctx *fiber.Ctx) ([]*BookingResponse, error)
 	bookings, err := s.bookingRepository.GetBookings(bson.M{})
 	if err != nil {
 		logs.Error(err)
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Unexpected error",
-		}
+		return nil, errs.ErrUnexpected()
 	}
 
 	data := []*BookingResponse{}
@@ -148,10 +139,7 @@ func (s *bookingService) GetBooking(ctx *fiber.Ctx, id string) (*BookingResponse
 
 	ok, err := isAuthorized(ctx, booking.UserId)
 	if err != nil || !ok {
-		return nil, errs.AppError{
-			Code:    http.StatusUnauthorized,
-			Message: "Unauthorized",
-		}
+		return nil, errs.ErrUnauthorized()
 	}
 
 	return MapBookingResponse(booking), nil
@@ -176,10 +164,7 @@ func (s *bookingService) CancelBooking(ctx *fiber.Ctx, id string) error {
 
 	ok, err := isAuthorized(ctx, booking.UserId)
 	if err != nil || !ok {
-		return errs.AppError{
-			Code:    http.StatusUnauthorized,
-			Message: "Unauthorized",
-		}
+		return errs.ErrUnauthorized()
 	}
 
 	filter := bson.M{"_id": oid}

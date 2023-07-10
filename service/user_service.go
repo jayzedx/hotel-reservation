@@ -55,10 +55,7 @@ func (s *userService) GetUsers() ([]*UserResponse, error) {
 	users, err := s.userRepository.GetUsers(bson.M{})
 	if err != nil {
 		logs.Error(err)
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Unexpected error",
-		}
+		return nil, errs.ErrUnexpected()
 	}
 
 	data := []*UserResponse{}
@@ -80,10 +77,7 @@ func (s *userService) CreateUser(params CreateUserParams) (*UserResponse, error)
 	user, err := CreateUserFromParams(&params)
 	if err != nil {
 		logs.Error(err)
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Unexpected error",
-		}
+		return nil, errs.ErrUnexpected()
 	}
 
 	if err = s.userRepository.CreateUser(user); err != nil {
@@ -99,10 +93,7 @@ func (s *userService) CreateUser(params CreateUserParams) (*UserResponse, error)
 func (s *userService) UpdateUser(userId string, params UpdateUserParams) error {
 	oid, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return errs.ErrBadRequest()
 	}
 	// validation
 	if errors := params.Validate(); len(errors) > 0 {
@@ -142,10 +133,7 @@ func (s *userService) UpdateUser(userId string, params UpdateUserParams) error {
 func (s *userService) DeleteUser(userId string) error {
 	oid, err := primitive.ObjectIDFromHex(userId)
 	if err != nil {
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return errs.ErrBadRequest()
 	}
 
 	if err := s.userRepository.DeleteUser(oid); err != nil {
@@ -172,10 +160,7 @@ func (s *userService) GetUsersByParams(params repo.User) ([]*UserResponse, error
 			}
 		} else {
 			logs.Error(err)
-			return nil, errs.AppError{
-				Code:    http.StatusBadRequest,
-				Message: "Upexpected Error",
-			}
+			return nil, errs.ErrUnexpected()
 		}
 	}
 
@@ -189,10 +174,7 @@ func (s *userService) GetUsersByParams(params repo.User) ([]*UserResponse, error
 func (s *userService) Drop() error {
 	if err := s.userRepository.Drop(); err != nil {
 		logs.Error(err)
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Upexpected Error",
-		}
+		return errs.ErrUnexpected()
 	}
 	return nil
 }

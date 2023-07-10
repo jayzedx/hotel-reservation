@@ -1,7 +1,6 @@
 package service
 
 import (
-	"net/http"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -58,7 +57,7 @@ func createTokenFromAuth(auth *repo.Auth) (string, error) {
 	tokenStr, err := token.SignedString([]byte(secret))
 	if err != nil {
 		logs.Error("Failed to sign token with secret")
-		return "", err
+		return "", errs.ErrUnexpected()
 	}
 	// auth.Token = tokenStr
 	return tokenStr, nil
@@ -67,10 +66,7 @@ func createTokenFromAuth(auth *repo.Auth) (string, error) {
 func isAuthorized(ctx *fiber.Ctx, userId primitive.ObjectID) (bool, error) {
 	user, ok := ctx.Context().UserValue("user").(*repo.User)
 	if !ok {
-		return false, errs.AppError{
-			Code:    http.StatusUnauthorized,
-			Message: "Unauthorized",
-		}
+		return false, errs.ErrUnauthorized()
 	}
 
 	return (user.Id == userId), nil

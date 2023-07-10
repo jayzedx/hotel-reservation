@@ -39,10 +39,7 @@ func (s *hotelService) GetHotels(params QueryHotelParams) ([]*HotelResponse, err
 
 	hotels, err := s.hotelRepository.GetHotels(filter)
 	if err != nil {
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return nil, errs.ErrBadRequest()
 	}
 
 	/*
@@ -60,10 +57,7 @@ func (s *hotelService) GetHotels(params QueryHotelParams) ([]*HotelResponse, err
 	*/
 	rooms, err := s.roomRepository.GetRooms(bson.M{})
 	if err != nil {
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return nil, errs.ErrBadRequest()
 	}
 
 	// map rooms by hotel id
@@ -92,20 +86,14 @@ func (s *hotelService) GetHotelRooms(id string) (*HotelResponse, error) {
 	hotel, err := s.hotelRepository.GetHotelById(oid)
 	if err != nil {
 		logs.Error(err)
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Upexpected Error",
-		}
+		return nil, errs.ErrUnexpected()
 	}
 
 	filter := bson.M{"hotel_id": hotel.Id}
 	rooms, err := s.roomRepository.GetRooms(filter)
 	if err != nil {
 		logs.Error(err)
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Upexpected Error",
-		}
+		return nil, errs.ErrUnexpected()
 	}
 
 	roomsReponse := []*RoomResponse{}

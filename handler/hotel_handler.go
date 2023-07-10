@@ -23,10 +23,7 @@ func (h *hotelHandler) HandleGetHotels(ctx *fiber.Ctx) error {
 
 	var params service.QueryHotelParams
 	if err := ctx.QueryParser(&params); err != nil {
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return errs.ErrBadRequest()
 	}
 
 	hotels, err := h.hotelService.GetHotels(params)
@@ -68,10 +65,7 @@ func (h *hotelHandler) HandleGetHotel(ctx *fiber.Ctx) error {
 func (h *hotelHandler) HandlePostHotel(ctx *fiber.Ctx) error {
 	var params service.CreateHotelParams
 	if err := ctx.BodyParser(&params); err != nil {
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return errs.ErrBadRequest()
 	}
 	hotel, err := h.hotelService.CreateHotel(params)
 	if err != nil {
@@ -96,10 +90,7 @@ func (h *hotelHandler) HandlePutHotel(ctx *fiber.Ctx) error {
 		params service.UpdateHotelParams
 	)
 	if err := ctx.BodyParser(&params); err != nil {
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return errs.ErrBadRequest()
 	}
 	if err := h.hotelService.UpdateHotel(id, params); err != nil {
 		appErr, ok := err.(errs.AppError)

@@ -40,10 +40,7 @@ func (h *roomHandler) HandleGetRooms(ctx *fiber.Ctx) error {
 func (h *roomHandler) HandlePostRoom(ctx *fiber.Ctx) error {
 	var params service.CreateRoomParams
 	if err := ctx.BodyParser(&params); err != nil {
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return errs.ErrBadRequest()
 	}
 
 	room, err := h.roomService.CreateRoom(params)
@@ -69,10 +66,7 @@ func (h *roomHandler) HandlePutRoom(ctx *fiber.Ctx) error {
 		params service.UpdateRoomParams
 	)
 	if err := ctx.BodyParser(&params); err != nil {
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return errs.ErrBadRequest()
 	}
 	if err := h.roomService.UpdateRoom(id, params); err != nil {
 		appErr, ok := err.(errs.AppError)

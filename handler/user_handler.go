@@ -68,10 +68,7 @@ func (h *userHandler) HandleGetUsers(ctx *fiber.Ctx) error {
 func (h *userHandler) HandlePostUser(ctx *fiber.Ctx) error {
 	var params service.CreateUserParams
 	if err := ctx.BodyParser(&params); err != nil {
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return errs.ErrBadRequest()
 	}
 	data, err := h.userService.CreateUser(params)
 	if err != nil {
@@ -98,10 +95,7 @@ func (h *userHandler) HandlePutUser(ctx *fiber.Ctx) error {
 	)
 
 	if err := ctx.BodyParser(&params); err != nil {
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return errs.ErrBadRequest()
 	}
 	if err := h.userService.UpdateUser(id, params); err != nil {
 		appErr, ok := err.(errs.AppError)
@@ -143,10 +137,7 @@ func (h *userHandler) HandleDeleteUser(ctx *fiber.Ctx) error {
 func (h *userHandler) HandleGetUsersByParams(ctx *fiber.Ctx) error {
 	var params repo.User
 	if err := ctx.QueryParser(&params); err != nil {
-		return errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Invalid data provided",
-		}
+		return errs.ErrBadRequest()
 	}
 	data, err := h.userService.GetUsersByParams(params)
 	if err != nil {

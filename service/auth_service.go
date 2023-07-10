@@ -33,10 +33,7 @@ func (s *authService) Authenticate(params CreateAuthParams) (*AuthResponse, erro
 			}
 		} else {
 			logs.Error(err)
-			return nil, errs.AppError{
-				Code:    http.StatusBadRequest,
-				Message: "Unexpected error",
-			}
+			return nil, errs.ErrUnexpected()
 		}
 	}
 
@@ -51,18 +48,12 @@ func (s *authService) Authenticate(params CreateAuthParams) (*AuthResponse, erro
 
 	if err := s.authRepository.CreateAuth(auth); err != nil {
 		logs.Error(err)
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Unexpected error",
-		}
+		return nil, errs.ErrUnexpected()
 	}
 	token, err := createTokenFromAuth(auth)
 	if err != nil {
 		logs.Error(err)
-		return nil, errs.AppError{
-			Code:    http.StatusBadRequest,
-			Message: "Unexpected error",
-		}
+		return nil, errs.ErrUnexpected()
 	}
 
 	return MapAuthResponse(auth, token), nil
