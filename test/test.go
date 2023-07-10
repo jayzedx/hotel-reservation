@@ -3,52 +3,73 @@ package test
 import (
 	"context"
 	"fmt"
-	"log"
-	"os"
 	"strings"
+	"testing"
 
+	"github.com/jayzedx/hotel-reservation/repo"
 	"github.com/spf13/viper"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
+
+type testApp struct {
+	client   *mongo.Client
+	database dbConfig
+	repo     *store
+}
 
 type dbConfig struct {
 	uri  string
 	name string
 }
 
-type TestApp struct {
-	client *mongo.Client
-	db     dbConfig
+type store struct {
+	user    repo.UserRepository
+	hotel   repo.HotelRepository
+	room    repo.RoomRepository
+	auth    repo.AuthRepository
+	booking repo.BookingRepository
 }
 
-func (t *TestApp) GetClient() *mongo.Client {
-	return t.client
-}
+var (
+	uri  string
+	name string
+)
 
-func (t *TestApp) GetDatabaseName() string {
-	return t.db.name
-}
-
-func NewTestApp() *TestApp {
-	initConfig()
-	var (
-		TEST_DB_URI  = viper.GetString("test_db.uri")
-		TEST_DB_NAME = viper.GetString("test_db.database")
-
-		testApp TestApp
-		err     error
-	)
-	fmt.Println("DB URI : ", TEST_DB_URI)
-	fmt.Println("DB NAME : ", TEST_DB_NAME)
-	testApp.client, err = mongo.Connect(context.TODO(), options.Client().ApplyURI(TEST_DB_URI))
-	testApp.db.name = TEST_DB_NAME
-	testApp.db.uri = TEST_DB_URI
-
-	if err != nil {
-		log.Fatal(err)
+func NewTestApp(config ...dbConfig) *testApp {
+	if len(config) > 0 {
+		uri = config[0].uri
+		name = config[0].name
+	} else {
+		initConfig()
+		uri = viper.GetString("test_db.uri")
+		name = viper.GetString("test_db.database")
 	}
-	return &testApp
+
+	fmt.Println("DB URI : ", uri)
+	fmt.Println("DB NAME : ", name)
+
+	client, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(uri))
+	if err != nil {
+		panic("Error to connect mongo db")
+	}
+
+	var testApp = &testApp{
+		client: client,
+		database: dbConfig{
+			uri:  uri,
+			name: name,
+		},
+		repo: &store{
+			user:    repo.NewUserRepository(client, name),
+			hotel:   repo.NewHotelRepository(client, name),
+			room:    repo.NewRoomRepository(client, name),
+			auth:    repo.NewAuthRepository(client, name),
+			booking: repo.NewBookingRepository(client, name),
+		},
+	}
+
+	return testApp
 }
 
 func initConfig() {
@@ -58,13 +79,15 @@ func initConfig() {
 	// APP_PORT=3000 go run .
 	viper.AutomaticEnv()
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
-
-	configPath := os.Getenv("CONFIG_PATH")
-	if configPath != "" {
-		viper.AddConfigPath(configPath)
-	}
+	viper.AddConfigPath(".")
 
 	if err := viper.ReadInConfig(); err != nil {
 		panic(err)
+	}
+}
+
+func (app *testApp) teardown(t *testing.T) {
+	if err := app.client.Database(app.database.name).Drop(context.TODO()); err != nil {
+		t.Fatal(err)
 	}
 }

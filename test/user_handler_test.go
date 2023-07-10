@@ -8,7 +8,6 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/jayzedx/hotel-reservation/handler"
-	"github.com/jayzedx/hotel-reservation/repo"
 	"github.com/jayzedx/hotel-reservation/resp"
 	"github.com/jayzedx/hotel-reservation/service"
 	"github.com/mitchellh/mapstructure"
@@ -18,12 +17,11 @@ func TestHandlePostUser(t *testing.T) {
 
 	app := fiber.New()
 	testApp := NewTestApp()
-
-	userRepo := repo.NewUserRepository(testApp.client, testApp.db.name)
+	userRepo := testApp.repo.user
 	userService := service.NewUserService(userRepo)
 	userHandler := handler.NewUserHandler(userService)
 
-	defer userTeardown(t, userRepo)
+	defer testApp.teardown(t)
 
 	app.Post("/user", userHandler.HandlePostUser)
 	params := service.CreateUserParams{
@@ -68,10 +66,4 @@ func TestHandlePostUser(t *testing.T) {
 		t.Fatalf("expected email %s but got %s", params.Email, user.Email)
 	}
 
-}
-
-func userTeardown(t *testing.T, userRepo repo.UserRepository) {
-	if err := userRepo.Drop(); err != nil {
-		t.Fatal(err)
-	}
 }

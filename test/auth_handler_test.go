@@ -19,10 +19,12 @@ func TestAuthenSuccess(t *testing.T) {
 	app := fiber.New()
 	testApp := NewTestApp()
 
-	userRepository := repo.NewUserRepository(testApp.client, testApp.db.name)
-	authRepository := repo.NewAuthRepository(testApp.client, testApp.db.name)
+	userRepository := testApp.repo.user
+	authRepository := testApp.repo.auth
 	authService := service.NewAuthService(userRepository, authRepository)
 	authHandler := handler.NewAuthHandler(authService)
+
+	defer testApp.teardown(t)
 
 	_, err := SetupAuthen(userRepository)
 	if err != nil {
@@ -64,8 +66,6 @@ func TestAuthenSuccess(t *testing.T) {
 	if auth.Token == "" {
 		t.Fatal("expecting a token to be set")
 	}
-
-	defer userTeardown(t, userRepository)
 }
 
 func SetupAuthen(userRepo repo.UserRepository) (*repo.User, error) {

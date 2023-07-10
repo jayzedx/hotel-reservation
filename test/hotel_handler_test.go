@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/jayzedx/hotel-reservation/handler"
 	"github.com/jayzedx/hotel-reservation/repo"
+	"github.com/jayzedx/hotel-reservation/repo/fixtures"
 	"github.com/jayzedx/hotel-reservation/resp"
 	"github.com/jayzedx/hotel-reservation/service"
 	"github.com/mitchellh/mapstructure"
@@ -20,13 +21,19 @@ func TestHandleGetHotels(t *testing.T) {
 	app := fiber.New()
 	testApp := NewTestApp()
 
-	hotelRepo := repo.NewHotelRepository(testApp.client, testApp.db.name)
-	roomRepo := repo.NewRoomRepository(testApp.client, testApp.db.name)
+	hotelRepo := testApp.repo.hotel
+	roomRepo := testApp.repo.room
 	hotelService := service.NewHotelService(hotelRepo, roomRepo)
 	hotelHandler := handler.NewHotelHandler(hotelService)
 
-	app.Get("/hotels", hotelHandler.HandleGetHotels)
+	defer testApp.teardown(t)
 
+	// hotel
+	hotel := fixtures.CreateHotel(hotelRepo, "Bellucia", "France", 4)
+	// room
+	fixtures.CreateRoom(roomRepo, repo.SingleRoomType, false, "small", 99.9, hotel.Id, true)
+
+	app.Get("/hotels", hotelHandler.HandleGetHotels)
 	values := url.Values{}
 	values.Add("rating", "1")
 

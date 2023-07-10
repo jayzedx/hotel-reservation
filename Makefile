@@ -7,8 +7,8 @@ run: build
 seed:
 	@go run scripts/seed.go
 
-test-seed:
+#test-seed:
 #	 @export SEED_MODE=TEST && go run scripts/seed.go
-	 @set SEED_MODE=TEST && go run scripts/seed.go
+#	 @set SEED_MODE=TEST && go run scripts/seed.go
 test:
 	@go test -v ./...
